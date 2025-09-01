@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "functions": {
+    "app/api/**/*.ts": {
+      "runtime": "edge"
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_API_URL": "/api/backend"
+  }
+}
