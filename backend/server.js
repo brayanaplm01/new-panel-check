@@ -620,7 +620,10 @@ app.post('/api/check/refresh', async (req, res) => {
             });
         }
 
-        const medias = await apiPoller.checkClient.getMedias(100, 0);
+        const limit = parseInt(req.body.limit) || 1000;
+        console.log(`🔄 Refrescando datos desde Check API con límite: ${limit}`);
+        
+        const medias = await apiPoller.checkClient.getMedias(limit, 0);
 
         let savedPosts = [];
         for (const media of medias) {
@@ -643,9 +646,10 @@ app.post('/api/check/refresh', async (req, res) => {
         }
 
         res.json({
-            message: `Datos refrescados: ${savedPosts.length} nuevos posts`,
+            message: `Datos refrescados: ${savedPosts.length} nuevos posts de ${medias.length} obtenidos`,
             success: true,
-            count: savedPosts.length
+            count: savedPosts.length,
+            total: medias.length
         });
     } catch (error) {
         console.error('Error refreshing Check API data:', error);
@@ -694,16 +698,21 @@ async function initializeApp() {
         await database.init(false);
         console.log('Base de datos inicializada');
 
-        // Inicializar poller de API
-        apiPoller = new ApiPoller(database, emitNewData);
-        await apiPoller.start();
-        console.log('Poller de API iniciado');
-
-        // Iniciar servidor
+        // Iniciar servidor HTTP primero
         server.listen(PORT, () => {
             console.log(`✅ Servidor ejecutándose en http://localhost:${PORT}`);
-            console.log(`✅ API Check Media conectada y funcionando`);
             console.log(`✅ Frontend esperado en: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+        });
+
+        // Inicializar poller de API en segundo plano
+        apiPoller = new ApiPoller(database, emitNewData);
+        console.log('🔧 Iniciando poller de API en segundo plano...');
+        
+        // No esperar a que termine el polling inicial
+        apiPoller.start().then(() => {
+            console.log('✅ API Check Media conectada y funcionando');
+        }).catch(error => {
+            console.error('❌ Error iniciando poller de API:', error);
         });
 
     } catch (error) {

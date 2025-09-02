@@ -51,9 +51,14 @@ class ApiPoller {
     async poll() {
         try {
             console.log('Polling Check API...');
-            const currentApiData = await this.checkClient.getMedias(100, 0);
+            const fetchLimit = config.check.fetchLimit || 1000;
+            console.log(`📥 Obteniendo hasta ${fetchLimit} medias desde Check API...`);
+            
+            const currentApiData = await this.checkClient.getMedias(fetchLimit, 0);
 
             if (currentApiData && currentApiData.length > 0) {
+                console.log(`✅ Check API devolvió ${currentApiData.length} medias`);
+                
                 // 1. Guardar/actualizar posts nuevos o existentes
                 const savedPosts = await this.saveNewData(currentApiData);
 
