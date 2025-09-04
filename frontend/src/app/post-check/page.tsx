@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IconRefresh, IconEye, IconExternalLink, IconFilter, IconSearch, IconPlus, IconCalendar } from '@tabler/icons-react';
 import { useArticles } from '@/hooks/useArticles';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
@@ -14,19 +14,25 @@ export default function PostCheckPage() {
     lastUpdated, 
     isConnected, 
     fetchArticles, 
-    createArticle 
-  } = useArticles(true, 30000); // Auto-refresh cada 30 segundos
+    createArticle,
+    totalCount,
+    setLimit,
+    currentLimit
+  } = useArticles(true, 30000, 500); // Auto-refresh cada 30 segundos, límite inicial 500
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('7d');
+  const [currentPage, setCurrentPage] = useState(1);
   const [newArticle, setNewArticle] = useState({
     title: '',
     summary: '',
     url: '',
     language: 'es'
   });
+
+  const itemsPerPage = 5;
 
   const handleCreateArticle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +54,29 @@ export default function PostCheckPage() {
     
     return matchesSearch && matchesStatus;
   });
+
+  // Reset current page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  // Refresh articles when limit changes
+  useEffect(() => {
+    if (currentLimit) {
+      fetchArticles();
+    }
+  }, [currentLimit, fetchArticles]);
+
+  // Pagination calculations
+  const totalItems = filteredArticles.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentArticles = filteredArticles.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,6 +157,28 @@ export default function PostCheckPage() {
           >
             <IconRefresh className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
+          </button>
+
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('http://localhost:5001/api/check/refresh', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ limit: currentLimit })
+                });
+                const result = await response.json();
+                console.log('Refresh result:', result);
+                fetchArticles(); // Refresh the local data
+              } catch (error) {
+                console.error('Error refreshing from CheckMedia:', error);
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+            title="Sincronizar desde CheckMedia"
+          >
+            <IconRefresh className="h-4 w-4" />
+            Sync CheckMedia
           </button>
         </div>
       </div>
@@ -257,6 +308,22 @@ export default function PostCheckPage() {
             <option value="90d">Últimos 90 días</option>
           </select>
         </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600 dark:text-gray-400">Límite:</span>
+          <select
+            value={currentLimit}
+            onChange={(e) => setLimit(parseInt(e.target.value))}
+            className="px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          >
+            <option value={100}>100 artículos</option>
+            <option value={250}>250 artículos</option>
+            <option value={500}>500 artículos</option>
+            <option value={1000}>1000 artículos</option>
+            <option value={2000}>2000 artículos</option>
+            <option value={5000}>5000 artículos</option>
+          </select>
+        </div>
       </div>
 
       {/* Analytics Section */}
@@ -284,13 +351,22 @@ export default function PostCheckPage() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
         <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg border border-neutral-200 dark:border-neutral-700">
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            {currentArticles.length}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Mostrados (Página {currentPage} de {totalPages || 1})
+          </div>
+        </div>
+        
+        <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
             {filteredArticles.length}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Mostrados
+            Filtrados
           </div>
         </div>
         
@@ -299,7 +375,7 @@ export default function PostCheckPage() {
             {articles.length}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Total
+            Cargados (de {totalCount} total)
           </div>
         </div>
         
@@ -324,7 +400,7 @@ export default function PostCheckPage() {
 
       {/* Articles List */}
       <div className="space-y-4">
-        {filteredArticles.length === 0 ? (
+        {currentArticles.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
             <p className="text-gray-600 dark:text-gray-400">
               {searchTerm || statusFilter !== 'all' 
@@ -334,7 +410,7 @@ export default function PostCheckPage() {
             </p>
           </div>
         ) : (
-          filteredArticles.map((article) => (
+          currentArticles.map((article) => (
             <div
               key={article.id}
               className="bg-white dark:bg-neutral-800 p-6 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-shadow"
@@ -407,6 +483,65 @@ export default function PostCheckPage() {
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-neutral-800 p-4 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} artículos
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+            >
+              Anterior
+            </button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  // Show first page, last page, current page, and pages around current
+                  return page === 1 || 
+                         page === totalPages || 
+                         Math.abs(page - currentPage) <= 1;
+                })
+                .map((page, index, array) => {
+                  // Add ellipsis if there's a gap
+                  const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
+                  
+                  return (
+                    <React.Fragment key={page}>
+                      {showEllipsisBefore && (
+                        <span className="px-2 text-gray-400">...</span>
+                      )}
+                      <button
+                        onClick={() => goToPage(page)}
+                        className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                          currentPage === page
+                            ? 'bg-blue-500 text-white'
+                            : 'border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-neutral-600'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+            </div>
+            
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm border border-gray-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-gray-700 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-600 transition-colors"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Loading indicator during refresh */}
       {loading && articles.length > 0 && (

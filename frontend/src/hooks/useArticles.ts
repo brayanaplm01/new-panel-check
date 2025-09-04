@@ -51,21 +51,30 @@ interface UseArticlesReturn {
   isConnected: boolean;
   fetchArticles: () => Promise<void>;
   createArticle: (articleData: Partial<Article>) => Promise<Article | null>;
+  totalCount: number;
+  setLimit: (limit: number) => void;
+  currentLimit: number;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
 
-export const useArticles = (autoRefresh = true, refreshInterval = 30000): UseArticlesReturn => {
+export const useArticles = (autoRefresh = true, refreshInterval = 30000, initialLimit = 500): UseArticlesReturn => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentLimit, setCurrentLimit] = useState(initialLimit);
+
+  const setLimit = useCallback((limit: number) => {
+    setCurrentLimit(limit);
+  }, []);
 
   const fetchArticles = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/articles`, {
+      const response = await fetch(`${API_BASE_URL}/articles?limit=${currentLimit}&offset=0`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -81,6 +90,7 @@ export const useArticles = (autoRefresh = true, refreshInterval = 30000): UseArt
       // Manejar diferentes formatos de respuesta del backend
       const articlesData = data.articles || [];
       setArticles(articlesData);
+      setTotalCount(data.total || articlesData.length);
       setLastUpdated(new Date());
       setError(null);
       setIsConnected(true);
@@ -91,7 +101,7 @@ export const useArticles = (autoRefresh = true, refreshInterval = 30000): UseArt
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentLimit]);
 
   const createArticle = useCallback(async (articleData: Partial<Article>): Promise<Article | null> => {
     try {
@@ -140,5 +150,8 @@ export const useArticles = (autoRefresh = true, refreshInterval = 30000): UseArt
     isConnected,
     fetchArticles,
     createArticle,
+    totalCount,
+    setLimit,
+    currentLimit,
   };
 };
