@@ -161,18 +161,18 @@ export default function InteractionsPage() {
 
       {/* Grid 2x2 de gráficos */}
       {stats && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
           {/* Red Social */}
           <div className="opacity-0 animate-fade-in-up delay-200">
             {stats.socialMedia ? (
               <AnimatedChart
                 title="Red Social"
                 data={stats.socialMedia}
-                color="rgb(59, 130, 246)" // blue-500
+                color="rgb(5, 130, 246)" // blue-500
               />
             ) : (
-              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6 h-96">
-                <p>Cargando gráfico de Red Social...</p>
+              <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6 h-[500px] flex items-center justify-center">
+                <p className="text-gray-500 dark:text-gray-400">Cargando gráfico de Red Social...</p>
               </div>
             )}
           </div>
