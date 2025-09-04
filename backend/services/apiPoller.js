@@ -51,7 +51,7 @@ class ApiPoller {
     async poll() {
         try {
             console.log('Polling Check API...');
-            const currentApiData = await this.checkClient.getMedias(100, 0);
+            const currentApiData = await this.checkClient.getMedias(500, 0);
 
             if (currentApiData && currentApiData.length > 0) {
                 // 1. Guardar/actualizar posts nuevos o existentes

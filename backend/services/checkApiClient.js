@@ -381,27 +381,27 @@ class CheckApiClient {
                 const label = task.label?.toLowerCase() || '';
                 const value = task.first_response_value || '';
 
-                if (label === '¿fue creado con ia?') {
+                if (label.includes('fue creado con ia') || label.includes('creado con ia')) {
                     schemaData.fue_creado_con_ia = this.normalizeYesNoField(value);
-                } else if (label === '¿ataca a un candidato?') {
+                } else if (label.includes('ataca a un candidato') || label.includes('ataca candidato')) {
                     schemaData.ataca_candidato = this.normalizeYesNoField(value);
-                } else if (label === '¿a qué candidato?') {
+                } else if (label.includes('qué candidato') || label.includes('que candidato')) {
                     schemaData.candidato_atacado = value;
-                } else if (label === '¿ataca al tse o al proceso electoral?') {
+                } else if (label.includes('ataca al tse') || label.includes('ataca tse') || label.includes('proceso electoral')) {
                     schemaData.ataca_tse = this.normalizeYesNoField(value);
-                } else if (label === '¿qué narrativa se utiliza para atacar al tse o al proceso electoral?') {
+                } else if (label.includes('narrativa') && label.includes('tse')) {
                     schemaData.narrativa_tse = value;
-                } else if (label === 'es caso es: ' || label === 'es caso es:') {
+                } else if (label.includes('es caso es') || label.includes('caso es')) {
                     schemaData.es_caso_es = this.normalizeCaseType(value);
-                } else if (label === 'señale qué narrativa de desinformación se utiliza ' || label === 'señale qué narrativa de desinformación se utiliza') {
+                } else if (label.includes('narrativa de desinformación') || label.includes('narrativa de desinformacion')) {
                     schemaData.narrativa_desinformacion = value;
-                } else if (label === '¿imita a un medio de comunicación?') {
+                } else if (label.includes('imita a un medio') || label.includes('imita medio')) {
                     schemaData.imita_medio = this.normalizeYesNoField(value);
-                } else if (label === '¿a qué medio?') {
+                } else if (label.includes('qué medio') || label.includes('que medio')) {
                     schemaData.medio_imitado = value;
-                } else if (label === '¿qué tipo de rumor es?') {
+                } else if (label.includes('tipo de rumor') || label.includes('tipo rumor')) {
                     schemaData.tipo_rumor = value;
-                } else if (label === 'el rumor que se promueve es: ' || label === 'el rumor que se promueve es:') {
+                } else if (label.includes('rumor que se promueve') || label.includes('rumor promueve')) {
                     schemaData.rumor_promovido = value;
                 }
             });

@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 const Database = require('./database/init');
 const ApiPoller = require('./services/apiPoller');
+const createElectoralRoutes = require('./routes/electoral');
 
 const app = express();
 const server = http.createServer(app);
@@ -251,9 +252,9 @@ app.get('/api/interactions-stats', async (req, res) => {
             'Twitter/X': 0,
             'YouTube': 0,
             'WhatsApp': 0,
-            'Telegram': 0,
-            'Web': 0,
-            'Otros': 0
+            //'Telegram': 0,
+            //'Web': 0,
+            //'Otros': 0
         };
         // Estadísticas por Status
         const statusStats = {
@@ -512,6 +513,33 @@ app.get('/api/statistics/interactions-accumulated', async (req, res) => {
     }
 });
 
+// Endpoint para debug - ver qué datos tenemos
+app.get('/api/debug/posts', async (req, res) => {
+    try {
+        const allPosts = await database.getPosts(10, 0);
+        
+        const debugInfo = allPosts.map(post => ({
+            id: post.id,
+            claim: post.claim?.substring(0, 100) + '...',
+            tags: post.tags,
+            narrativa_desinformacion: post.narrativa_desinformacion,
+            narrativa_tse: post.narrativa_tse,
+            submitted_at: post.submitted_at,
+            updated_at: post.updated_at,
+            created_at: post.created_at
+        }));
+        
+        res.json({
+            success: true,
+            data: debugInfo,
+            total: allPosts.length
+        });
+    } catch (error) {
+        console.error('Error in debug endpoint:', error);
+        res.status(500).json({ error: 'Debug error' });
+    }
+});
+
 // Endpoints del dashboard original para compatibilidad
 app.get('/api/posts', async (req, res) => {
     try {
@@ -693,6 +721,10 @@ async function initializeApp() {
         // Inicializar base de datos
         await database.init(false);
         console.log('Base de datos inicializada');
+
+        // Configurar rutas electorales
+        app.use('/api/electoral', createElectoralRoutes(database));
+        console.log('Rutas electorales configuradas');
 
         // Inicializar poller de API
         apiPoller = new ApiPoller(database, emitNewData);
