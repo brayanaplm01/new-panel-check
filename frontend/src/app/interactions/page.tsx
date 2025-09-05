@@ -161,7 +161,7 @@ export default function InteractionsPage() {
 
       {/* Grid 2x2 de gráficos */}
       {stats && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-12git">
           {/* Red Social */}
           <div className="opacity-0 animate-fade-in-up delay-200">
             {stats.socialMedia ? (
