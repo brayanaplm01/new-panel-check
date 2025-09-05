@@ -28,6 +28,26 @@ export default function InteractionsPage() {
     fetchStats(filterDate);
   };
 
+  // Verificar si hay datos
+  const hasData = stats && (
+    Object.values(stats.socialMedia || {}).some(val => val > 0) ||
+    Object.values(stats.status || {}).some(val => val > 0) ||
+    Object.values(stats.format || {}).some(val => val > 0) ||
+    Object.values(stats.tags || {}).some(val => val > 0)
+  );
+
+  // Función para probar fechas comunes que podrían tener datos
+  const testTodayData = () => {
+    const today = new Date();
+    handleDateChange(today);
+  };
+
+  const testYesterdayData = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    handleDateChange(yesterday);
+  };
+
   // Animaciones para los números del resumen
   const totalInteractionsCount = useCountUp({ 
     end: stats?.totalInteractions || 0, 
@@ -61,13 +81,13 @@ export default function InteractionsPage() {
 
   if (loading && !stats) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Cargando estadísticas de interacciones
             {selectedDate && (
-              <span className="block text-sm mt-1">
+              <span className="block text-sm mt-1 text-blue-600 dark:text-blue-400">
                 para el {format(selectedDate, 'dd/MM/yyyy')}
               </span>
             )}
@@ -80,11 +100,22 @@ export default function InteractionsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-            <h2 className="text-red-800 font-semibold mb-2">Error de conexión</h2>
-            <p className="text-red-600 mb-4">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md">
+            <h2 className="text-red-800 dark:text-red-200 font-semibold mb-2">Error de conexión</h2>
+            <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+            {filterDate && (
+              <p className="text-sm text-red-500 dark:text-red-400 mb-4">
+                Filtrando por: {format(filterDate, 'dd/MM/yyyy')}
+              </p>
+            )}
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded p-3 mb-4">
+              <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                <strong>💡 Consejo:</strong> Si obtienes "Failed to fetch", verifica que el backend esté ejecutándose. 
+                Si hay 0 resultados, prueba con fechas de septiembre 2025 donde hay datos disponibles.
+              </p>
+            </div>
             <button
               onClick={handleRefresh}
               className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -172,6 +203,47 @@ export default function InteractionsPage() {
           </div>
         </div>
       </div>
+
+      {/* Mensaje cuando no hay datos para la fecha seleccionada */}
+      {!loading && filterDate && !hasData && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 opacity-0 animate-fade-in-up delay-100">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-yellow-600 dark:text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c.77.833 1.732 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                Sin datos para {format(filterDate, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
+              </h3>
+              <p className="text-yellow-700 dark:text-yellow-300 mb-4">
+                No se encontraron interacciones para la fecha seleccionada. Los datos podrían estar disponibles en fechas más recientes.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={testTodayData}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Probar Hoy ({format(new Date(), 'dd/MM/yyyy')})
+                </button>
+                <button
+                  onClick={testYesterdayData}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Probar Ayer ({format(new Date(Date.now() - 24*60*60*1000), 'dd/MM/yyyy')})
+                </button>
+                <button
+                  onClick={() => handleDateChange(null)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  Ver Todos los Datos
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Summary */}
       {stats && (

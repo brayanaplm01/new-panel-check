@@ -245,6 +245,8 @@ app.get('/api/interactions-stats', async (req, res) => {
         const { date } = req.query;
         let allPosts;
         
+        console.log('📅 Filtering by date:', date);
+        
         if (date) {
             // Filtrar por fecha específica
             const targetDate = new Date(date);
@@ -253,16 +255,37 @@ app.get('/api/interactions-stats', async (req, res) => {
             const endOfDay = new Date(targetDate);
             endOfDay.setHours(23, 59, 59, 999);
             
+            console.log('🔍 Date range:', {
+                startOfDay: startOfDay.toISOString(),
+                endOfDay: endOfDay.toISOString()
+            });
+            
             // Obtener todos los posts y filtrar por fecha
             const allPostsData = await database.getPosts(10000, 0);
+            console.log('📊 Total posts before filtering:', allPostsData.length);
+            
             allPosts = allPostsData.filter(post => {
                 if (!post.submitted_at) return false;
                 const postDate = new Date(post.submitted_at);
-                return postDate >= startOfDay && postDate <= endOfDay;
+                const isInRange = postDate >= startOfDay && postDate <= endOfDay;
+                
+                // Log algunas fechas para debugging
+                if (allPostsData.indexOf(post) < 5) {
+                    console.log('📅 Post date sample:', {
+                        submitted_at: post.submitted_at,
+                        postDate: postDate.toISOString(),
+                        isInRange
+                    });
+                }
+                
+                return isInRange;
             });
+            
+            console.log('📊 Posts after filtering:', allPosts.length);
         } else {
             // Obtener todos los posts (comportamiento original)
             allPosts = await database.getPosts(10000, 0);
+            console.log('📊 Total posts (no filter):', allPosts.length);
         }
         
         // Estadísticas por Red Social
@@ -531,6 +554,42 @@ app.get('/api/statistics/interactions-accumulated', async (req, res) => {
     } catch (error) {
         console.error('Error fetching accumulated interactions statistics:', error);
         res.status(500).json({ error: 'Error fetching accumulated interactions statistics' });
+    }
+});
+
+// Endpoint para debug - ver qué fechas tenemos en la base de datos
+app.get('/api/debug/dates', async (req, res) => {
+    try {
+        const allPosts = await database.getPosts(10000, 0);
+        
+        // Extraer y analizar todas las fechas
+        const dateInfo = allPosts.map(post => ({
+            id: post.id,
+            submitted_at: post.submitted_at,
+            parsed_date: post.submitted_at ? new Date(post.submitted_at).toISOString() : null,
+            formatted_date: post.submitted_at ? new Date(post.submitted_at).toLocaleDateString() : null
+        })).filter(info => info.submitted_at); // Solo posts con fecha
+        
+        // Obtener fechas únicas
+        const uniqueDates = [...new Set(dateInfo.map(info => info.formatted_date))].sort();
+        
+        res.json({
+            total_posts: allPosts.length,
+            posts_with_dates: dateInfo.length,
+            date_range: {
+                oldest: dateInfo.length > 0 ? dateInfo.reduce((min, curr) => 
+                    new Date(curr.submitted_at) < new Date(min.submitted_at) ? curr : min
+                ) : null,
+                newest: dateInfo.length > 0 ? dateInfo.reduce((max, curr) => 
+                    new Date(curr.submitted_at) > new Date(max.submitted_at) ? curr : max
+                ) : null
+            },
+            unique_dates: uniqueDates,
+            sample_posts: dateInfo.slice(0, 10) // Primeros 10 para muestra
+        });
+    } catch (error) {
+        console.error('Error fetching date debug info:', error);
+        res.status(500).json({ error: 'Error fetching date debug info' });
     }
 });
 

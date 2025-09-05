@@ -53,6 +53,8 @@ export const useInteractionStats = ({
         url += `?date=${dateStr}`;
       }
 
+      console.log('🔗 Fetching from URL:', url);
+      
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -60,8 +62,12 @@ export const useInteractionStats = ({
         },
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ Response error:', errorText);
+        throw new Error(`Error: ${response.status} - ${response.statusText} - ${errorText}`);
       }
 
       const data: InteractionStats = await response.json();
