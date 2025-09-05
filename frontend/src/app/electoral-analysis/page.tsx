@@ -117,7 +117,7 @@ export default function ElectoralAnalysisPage() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6 opacity-0 animate-fade-in-up delay-100">
+      <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6 opacity-0 animate-fade-in-up delay-100 z-0">
         <div className="flex items-center gap-3 mb-4">
           <IconFilter className="h-5 w-5 text-gray-500" />
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">

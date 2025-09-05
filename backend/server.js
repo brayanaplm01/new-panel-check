@@ -242,7 +242,28 @@ app.get('/api/statistics', async (req, res) => {
 // Endpoint para estadísticas de interacciones acumuladas
 app.get('/api/interactions-stats', async (req, res) => {
     try {
-        const allPosts = await database.getPosts(10000, 0);
+        const { date } = req.query;
+        let allPosts;
+        
+        if (date) {
+            // Filtrar por fecha específica
+            const targetDate = new Date(date);
+            const startOfDay = new Date(targetDate);
+            startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date(targetDate);
+            endOfDay.setHours(23, 59, 59, 999);
+            
+            // Obtener todos los posts y filtrar por fecha
+            const allPostsData = await database.getPosts(10000, 0);
+            allPosts = allPostsData.filter(post => {
+                if (!post.submitted_at) return false;
+                const postDate = new Date(post.submitted_at);
+                return postDate >= startOfDay && postDate <= endOfDay;
+            });
+        } else {
+            // Obtener todos los posts (comportamiento original)
+            allPosts = await database.getPosts(10000, 0);
+        }
         
         // Estadísticas por Red Social
         const socialStats = {
