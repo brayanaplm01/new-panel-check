@@ -112,7 +112,7 @@ export default function InteractionsPage() {
             )}
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded p-3 mb-4">
               <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                <strong>💡 Consejo:</strong> Si obtienes "Failed to fetch", verifica que el backend esté ejecutándose. 
+                <strong>💡 Consejo:</strong> Si obtienes, verifica que el backend esté ejecutándose. 
                 Si hay 0 resultados, prueba con fechas de septiembre 2025 donde hay datos disponibles.
               </p>
             </div>
@@ -135,10 +135,10 @@ export default function InteractionsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Interacciones Acumuladas
+              Análisis de Publicaciones
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Análisis de interacciones por categorías
+              Distribución de publicaciones por categorías
               {filterDate && (
                 <span className="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400">
                   • {format(filterDate, 'dd \'de\' MMMM \'de\' yyyy', { locale: es })}
@@ -266,7 +266,7 @@ export default function InteractionsPage() {
                 {totalInteractionsCount.count.toLocaleString()}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Total Interacciones
+                Total Publicaciones
               </div>
             </div>
             

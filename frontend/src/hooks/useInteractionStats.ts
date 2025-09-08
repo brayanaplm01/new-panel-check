@@ -7,7 +7,7 @@ interface InteractionStats {
   status: Record<string, number>;
   format: Record<string, number>;
   tags: Record<string, number>;
-  totalInteractions: number;
+  totalInteractions: number; // Ahora representa total de publicaciones
 }
 
 interface UseInteractionStatsOptions {
