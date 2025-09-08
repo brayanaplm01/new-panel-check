@@ -66,8 +66,8 @@ export const DatePicker = memo(function DatePicker({
     setIsOpen(false);
   };
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleClear = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     onChange(null);
   };
 
@@ -174,7 +174,7 @@ export const DatePicker = memo(function DatePicker({
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  handleClear(e as any);
+                  handleClear();
                 }
               }}
               role="button"
@@ -262,7 +262,7 @@ export const DatePicker = memo(function DatePicker({
                     }
                   `}
                   aria-label={`${date.getDate()} de ${format(date, 'MMMM yyyy', { locale: es })}`}
-                  aria-selected={selected ? true : undefined}
+                  aria-pressed={selected ? true : undefined}
                 >
                   {date.getDate()}
                 </button>

@@ -1,0 +1,13 @@
+name = "new-panel-check-frontend"
+compatibility_date = "2024-01-15"
+pages_build_output_dir = "out"
+
+[env.production]
+name = "new-panel-check-frontend"
+
+[env.preview]
+name = "new-panel-check-frontend-preview"
+
+# Variables de entorno
+[vars]
+NEXT_PUBLIC_API_URL = "https://your-backend-url.com/api"

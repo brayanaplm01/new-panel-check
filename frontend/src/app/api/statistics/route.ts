@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000/api';
 
 export async function GET() {

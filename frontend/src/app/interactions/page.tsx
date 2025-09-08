@@ -112,7 +112,7 @@ export default function InteractionsPage() {
             )}
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded p-3 mb-4">
               <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                <strong>💡 Consejo:</strong> Si obtienes "Failed to fetch", verifica que el backend esté ejecutándose. 
+                <strong>💡 Consejo:</strong> Si obtienes &quot;Failed to fetch&quot;, verifica que el backend esté ejecutándose. 
                 Si hay 0 resultados, prueba con fechas de septiembre 2025 donde hay datos disponibles.
               </p>
             </div>

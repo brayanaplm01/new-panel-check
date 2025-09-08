@@ -30,13 +30,12 @@ interface AnimatedChartProps {
 
 export const AnimatedChart: React.FC<AnimatedChartProps> = ({ title, data, color }) => {
   const [animatedData, setAnimatedData] = useState<Record<string, number>>({});
-  const [isAnimating, setIsAnimating] = useState(false);
 
   // Mapeo completo para todas las categorías
-  const getItemInfo = (label: string, chartTitle: string) => {
+  const getItemInfo = (label: string, chartTitle: string): { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string } => {
     // Mapeo para Redes Sociales
     if (chartTitle.toLowerCase().includes('red social') || chartTitle.toLowerCase().includes('social')) {
-      const socialMapping: Record<string, { icon: any, color: string, bgColor: string }> = {
+      const socialMapping: Record<string, { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string }> = {
         'TikTok': { icon: IconBrandTiktok, color: '#000000', bgColor: 'bg-black' },
         'Facebook': { icon: IconBrandFacebook, color: '#1877F2', bgColor: 'bg-blue-600' },
         'Instagram': { icon: IconBrandInstagram, color: '#E4405F', bgColor: 'bg-pink-500' },
@@ -62,7 +61,7 @@ export const AnimatedChart: React.FC<AnimatedChartProps> = ({ title, data, color
 
     // Mapeo para Status/Estados
     if (chartTitle.toLowerCase().includes('status') || chartTitle.toLowerCase().includes('estado')) {
-      const statusMapping: Record<string, { icon: any, color: string, bgColor: string }> = {
+      const statusMapping: Record<string, { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string }> = {
         'Verificado': { icon: IconShieldCheck, color: '#10B981', bgColor: 'bg-green-500' },
         'Falso': { icon: IconShieldX, color: '#EF4444', bgColor: 'bg-red-500' },
         'Engañoso': { icon: IconAlertTriangle, color: '#F59E0B', bgColor: 'bg-yellow-500' },
@@ -77,7 +76,7 @@ export const AnimatedChart: React.FC<AnimatedChartProps> = ({ title, data, color
 
     // Mapeo para Formatos
     if (chartTitle.toLowerCase().includes('formato')) {
-      const formatMapping: Record<string, { icon: any, color: string, bgColor: string }> = {
+      const formatMapping: Record<string, { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string }> = {
         'Audiovisual': { icon: IconVideo, color: '#DC2626', bgColor: 'bg-red-600' },
         'Imagen': { icon: IconPhoto, color: '#059669', bgColor: 'bg-emerald-600' },
         'Texto': { icon: IconFileText, color: '#1D4ED8', bgColor: 'bg-blue-700' },
@@ -109,7 +108,6 @@ export const AnimatedChart: React.FC<AnimatedChartProps> = ({ title, data, color
     }, {} as Record<string, number>);
     
     setAnimatedData(initialData);
-    setIsAnimating(true);
 
     // Iniciar animación después de un delay
     const timer = setTimeout(() => {
@@ -137,7 +135,6 @@ export const AnimatedChart: React.FC<AnimatedChartProps> = ({ title, data, color
         } else {
           // Asegurar valores finales exactos
           setAnimatedData(data);
-          setIsAnimating(false);
         }
       };
 

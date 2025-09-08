@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 
-// Mock data de artículos
+export const dynamic = 'force-static';
+
+// Datos simulados para desarrollo
 const mockArticles = Array.from({ length: 100 }, (_, i) => ({
   id: i + 1,
   title: `Verificación ${i + 1}`,

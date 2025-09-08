@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
 // Simulamos los datos del backend por ahora
 const mockData = {
   articles: Array.from({ length: 100 }, (_, i) => ({
