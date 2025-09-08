@@ -27,9 +27,9 @@ export function SimpleChart({
   color = 'rgb(59, 130, 246)' 
 }: SimpleChartProps) {
   // Mapeo exacto de las redes sociales del backend con iconos y colores
-  const getSocialMediaInfo = (label: string) => {
+  const getSocialMediaInfo = (label: string): { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string } => {
     // Mapeo exacto basado en tu backend socialStats
-    const socialMapping: Record<string, { icon: any, color: string, bgColor: string }> = {
+    const socialMapping: Record<string, { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string }> = {
       'TikTok': { icon: IconBrandTiktok, color: '#000000', bgColor: 'bg-black' },
       'Facebook': { icon: IconBrandFacebook, color: '#1877F2', bgColor: 'bg-blue-600' },
       'Instagram': { icon: IconBrandInstagram, color: '#E4405F', bgColor: 'bg-pink-500' },

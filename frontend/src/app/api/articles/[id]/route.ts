@@ -1,5 +1,14 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
+export function generateStaticParams() {
+  // Generar parámetros estáticos para algunos IDs de ejemplo
+  return Array.from({ length: 10 }, (_, i) => ({
+    id: String(i + 1)
+  }));
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
