@@ -7,6 +7,7 @@ interface ElectoralAnalysisData {
   desinfoNarratives: Record<string, number>; // Conteos individuales de narrativas de desinformación
   contenidoNarratives: Record<string, number>; // Conteos individuales de narrativas de TSE
   withoutNarratives: Record<string, number>;
+  allTagCounts: Record<string, number>; // NUEVO: Conteos totales por tag
   totalPosts: number;
   totalWithNarratives: number;
   totalWithoutNarratives: number;

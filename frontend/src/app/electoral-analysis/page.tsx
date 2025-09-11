@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { IconRefresh, IconChartBar, IconFilter, IconTag, IconCalendar, IconAlertTriangle, IconCheck, IconBrain } from '@tabler/icons-react';
+import { IconRefresh, IconFilter, IconTag, IconCalendar, IconAlertTriangle, IconCheck } from '@tabler/icons-react';
 import { useElectoralAnalysis } from '@/hooks/useElectoralAnalysis';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
-import { AnimatedChart } from '@/components/charts/AnimatedChart';
+import { InteractionBarChart } from '@/components/charts/InteractionBarChart';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -12,7 +12,7 @@ export default function ElectoralAnalysisPage() {
   const { data, loading, error, lastUpdated, fetchData } = useElectoralAnalysis();
   
   // Estados para los filtros
-  const [selectedTag, setSelectedTag] = useState('DesinfoElecciones2025');
+  const [selectedTag, setSelectedTag] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(new Date('2025-09-01'));
   const [endDate, setEndDate] = useState<Date | null>(new Date('2025-09-30'));
 
@@ -20,7 +20,9 @@ export default function ElectoralAnalysisPage() {
   useEffect(() => {
     const startDateStr = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
     const endDateStr = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
-    fetchData(selectedTag, startDateStr, endDateStr);
+    // Si no hay tag seleccionado, usar 'DesinfoElecciones2025' por defecto para obtener la estructura de datos
+    const tagToFetch = selectedTag || 'DesinfoElecciones2025';
+    fetchData(tagToFetch, startDateStr, endDateStr);
   }, [selectedTag, startDate, endDate, fetchData]);
 
   const handleTagChange = (tag: string) => {
@@ -30,7 +32,8 @@ export default function ElectoralAnalysisPage() {
   const handleRefresh = () => {
     const startDateStr = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
     const endDateStr = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
-    fetchData(selectedTag, startDateStr, endDateStr);
+    const tagToFetch = selectedTag || 'DesinfoElecciones2025';
+    fetchData(tagToFetch, startDateStr, endDateStr);
   };
 
   // Función para obtener el rango de fechas como texto
@@ -48,24 +51,6 @@ export default function ElectoralAnalysisPage() {
       return format(startDate, 'dd \'de\' MMMM \'de\' yyyy', { locale: es });
     }
     return 'Período personalizado';
-  };
-
-  const getChartTitle = () => {
-    if (selectedTag === 'DesinfoElecciones2025') {
-      return 'Análisis de Desinformación Electoral';
-    } else if (selectedTag === 'ContenidoElecciones2025') {
-      return 'Análisis de Contenido Electoral';
-    }
-    return 'Análisis Electoral 2025';
-  };
-
-  const getChartDescription = () => {
-    if (selectedTag === 'DesinfoElecciones2025') {
-      return 'Distribución de publicaciones con narrativas de desinformación electoral';
-    } else if (selectedTag === 'ContenidoElecciones2025') {
-      return 'Distribución de publicaciones con contenido electoral relevante';
-    }
-    return 'Análisis de publicaciones con etiquetas electorales y narrativas asignadas';
   };
 
   // Estados de carga y error
@@ -122,7 +107,10 @@ export default function ElectoralAnalysisPage() {
               Análisis Electoral 2025
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Análisis de publicaciones con etiquetas electorales y narrativas específicas
+              {selectedTag 
+                ? `Análisis específico de ${selectedTag === 'DesinfoElecciones2025' ? 'desinformación electoral' : 'contenido electoral TSE'}`
+                : 'Comparativa entre desinformación electoral y contenido electoral TSE'
+              }
               {(startDate || endDate) && (
                 <span className="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400">
                   • {getTimeRangeLabel()}
@@ -170,8 +158,9 @@ export default function ElectoralAnalysisPage() {
                 disabled={loading}
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
               >
+                <option value="">Comparativa de Ambos</option>
                 <option value="DesinfoElecciones2025">Desinformación Electoral</option>
-                <option value="ContenidoElecciones2025">Contenido Electoral</option>
+                <option value="ContenidoElecciones2025">Contenido Electoral TSE</option>
               </select>
             </div>
 
@@ -307,149 +296,181 @@ export default function ElectoralAnalysisPage() {
         </div>
       )}
 
-      {/* Gráfica principal */}
-      {data && data.narratives && (
+      {/* Gráfica Principal del Tag Seleccionado */}
+      {data && data.narratives && selectedTag && (
         <div className="opacity-0 animate-fade-in-up delay-150">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <IconChartBar className="h-6 w-6 text-blue-500" />
+          <InteractionBarChart
+            title={`Narrativas de ${selectedTag === 'DesinfoElecciones2025' ? 'Desinformación Electoral' : 'Contenido Electoral TSE'}`}
+            data={data.narratives}
+            className="w-full"
+            color={selectedTag === 'DesinfoElecciones2025' ? 'rgb(220, 38, 127)' : 'rgb(59, 130, 246)'}
+            maxItems={15}
+          />
+        </div>
+      )}
+
+      {/* Gráfica Comparativa de Tags Electorales - Solo cuando no hay tag específico seleccionado */}
+      {data && data.allTagCounts && !selectedTag && (
+        <div className="opacity-0 animate-fade-in-up delay-175">
+          <InteractionBarChart
+            title="Comparativa de Publicaciones Electorales"
+            data={data.allTagCounts}
+            className="w-full"
+            color="rgb(147, 51, 234)"
+            maxItems={10}
+          />
+
+          {/* Resumen comparativo */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {getChartTitle()}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {getChartDescription()}
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  Desinformación Electoral
+                </span>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  Publicaciones con contenido de desinformación
                 </p>
               </div>
+              <span className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-3 py-2 rounded-full text-lg font-bold">
+                {data.allTagCounts['DesinfoElecciones2025'] || 0}
+              </span>
             </div>
-
-            <AnimatedChart
-              title=""
-              data={data.narratives}
-              color="rgb(59, 130, 246)"
-            />
+            
+            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  Contenido Electoral TSE
+                </span>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  Publicaciones sobre contenido electoral general
+                </p>
+              </div>
+              <span className="bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-3 py-2 rounded-full text-lg font-bold">
+                {data.allTagCounts['ContenidoElecciones2025'] || 0}
+              </span>
+            </div>
           </div>
+
+          {/* Porcentajes */}
+          {(data.allTagCounts['DesinfoElecciones2025'] > 0 || data.allTagCounts['ContenidoElecciones2025'] > 0) && (
+            <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+              <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+                <span className="font-medium">
+                  {data.allTagCounts['DesinfoElecciones2025'] || 0} desinformación 
+                </span>
+                {' vs '}
+                <span className="font-medium">
+                  {data.allTagCounts['ContenidoElecciones2025'] || 0} contenido electoral
+                </span>
+                {' • '}
+                <span className="text-xs">
+                  Total: {(data.allTagCounts['DesinfoElecciones2025'] || 0) + (data.allTagCounts['ContenidoElecciones2025'] || 0)} publicaciones
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Narrativas Individuales de DesinfoElecciones2025 */}
-      {data && data.desinfoNarratives && Object.keys(data.desinfoNarratives).length > 0 && (
-        <div className="opacity-0 animate-fade-in-up delay-175">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <IconBrain className="h-6 w-6 text-red-500" />
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Narrativas de Desinformación Electoral 2025
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Distribución de publicaciones por tipo de narrativa específica ({getTimeRangeLabel()})
-                </p>
+      {data && data.desinfoNarratives && selectedTag === 'DesinfoElecciones2025' && Object.keys(data.desinfoNarratives).length > 0 && (
+        <div className="opacity-0 animate-fade-in-up delay-200">
+          <InteractionBarChart
+            title="Narrativas de Desinformación Electoral 2025"
+            data={data.desinfoNarratives}
+            className="w-full"
+            color="rgb(220, 38, 127)"
+            maxItems={15}
+          />
+
+          {/* Lista de narrativas con conteos */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(data.desinfoNarratives)
+              .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
+              .map(([narrative, count]) => (
+              <div 
+                key={narrative}
+                className="flex items-center justify-between p-3 bg-pink-50 dark:bg-pink-900/10 rounded-lg border border-pink-200 dark:border-pink-800"
+              >
+                <span className="text-sm font-medium text-gray-900 dark:text-white truncate mr-2">
+                  {narrative}
+                </span>
+                <span className="bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200 px-2 py-1 rounded-full text-xs font-bold">
+                  {count}
+                </span>
               </div>
-            </div>
-
-            <AnimatedChart
-              title=""
-              data={data.desinfoNarratives}
-              color="rgb(239, 68, 68)"
-            />
-
-            {/* Lista de narrativas con conteos */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Object.entries(data.desinfoNarratives)
-                .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
-                .map(([narrative, count]) => (
-                <div 
-                  key={narrative}
-                  className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800"
-                >
-                  <span className="text-sm font-medium text-gray-900 dark:text-white truncate mr-2">
-                    {narrative}
-                  </span>
-                  <span className="bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 px-2 py-1 rounded-full text-xs font-bold">
-                    {count}
-                  </span>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* Narrativas Individuales de ContenidoElecciones2025 */}
-      {data && data.contenidoNarratives && Object.keys(data.contenidoNarratives).length > 0 && (
+      {data && data.contenidoNarratives && selectedTag === 'ContenidoElecciones2025' && Object.keys(data.contenidoNarratives).length > 0 && (
         <div className="opacity-0 animate-fade-in-up delay-200">
-          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <IconAlertTriangle className="h-6 w-6 text-orange-500" />
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Narrativas de Contenido Electoral TSE 2025
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Distribución de publicaciones por tipo de narrativa contra el TSE ({getTimeRangeLabel()})
-                </p>
+          <InteractionBarChart
+            title="Narrativas de Contenido Electoral TSE 2025"
+            data={data.contenidoNarratives}
+            className="w-full"
+            color="rgb(251, 146, 60)"
+            maxItems={15}
+          />
+
+          {/* Lista de narrativas con conteos */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(data.contenidoNarratives)
+              .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
+              .map(([narrative, count]) => (
+              <div 
+                key={narrative}
+                className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200 dark:border-orange-800"
+              >
+                <span className="text-sm font-medium text-gray-900 dark:text-white truncate mr-2">
+                  {narrative}
+                </span>
+                <span className="bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full text-xs font-bold">
+                  {count}
+                </span>
               </div>
-            </div>
-
-            <AnimatedChart
-              title=""
-              data={data.contenidoNarratives}
-              color="rgb(251, 146, 60)"
-            />
-
-            {/* Lista de narrativas con conteos */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Object.entries(data.contenidoNarratives)
-                .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
-                .map(([narrative, count]) => (
-                <div 
-                  key={narrative}
-                  className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-200 dark:border-orange-800"
-                >
-                  <span className="text-sm font-medium text-gray-900 dark:text-white truncate mr-2">
-                    {narrative}
-                  </span>
-                  <span className="bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full text-xs font-bold">
-                    {count}
-                  </span>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Sección de Publicaciones SIN Narrativas */}
-      {data && data.withoutNarratives && (
+      {/* Sección de Publicaciones SIN Narrativas - Solo cuando hay un tag específico seleccionado */}
+      {data && data.withoutNarratives && selectedTag && (
         <div className="opacity-0 animate-fade-in-up delay-225">
           <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6">
             <div className="flex items-center gap-3 mb-6">
               <IconAlertTriangle className="h-6 w-6 text-gray-500" />
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Publicaciones Sin Narrativas Asignadas
+                  Publicaciones {selectedTag === 'DesinfoElecciones2025' ? 'de Desinformación' : 'de Contenido Electoral'} Sin Narrativas
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Publicaciones con etiquetas electorales pero sin narrativas específicas ({getTimeRangeLabel()})
+                  Publicaciones con etiqueta {selectedTag === 'DesinfoElecciones2025' ? 'DesinfoElecciones2025' : 'ContenidoElecciones2025'} pero sin narrativas específicas ({getTimeRangeLabel()})
                 </p>
               </div>
             </div>
 
-            {(!data.withoutNarratives['DesinfoElecciones2025'] || data.withoutNarratives['DesinfoElecciones2025'] === 0) &&
-             (!data.withoutNarratives['ContenidoElecciones2025'] || data.withoutNarratives['ContenidoElecciones2025'] === 0) ? (
+            {(!data.withoutNarratives[selectedTag] || data.withoutNarratives[selectedTag] === 0) ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <IconCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <p className="text-lg font-medium">¡Excelente!</p>
-                <p>Todas las publicaciones electorales tienen narrativas asignadas</p>
+                <p>Todas las publicaciones de {selectedTag === 'DesinfoElecciones2025' ? 'desinformación electoral' : 'contenido electoral'} tienen narrativas asignadas</p>
                 <div className="text-sm mt-1">({getTimeRangeLabel()})</div>
               </div>
             ) : (
-              <AnimatedChart
-                title=""
-                data={data.withoutNarratives}
-                color="rgb(107, 114, 128)"
-              />
+              <div className="text-center py-8">
+                <div className="text-4xl font-bold text-gray-600 dark:text-gray-400 mb-2">
+                  {data.withoutNarratives[selectedTag].toLocaleString()}
+                </div>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Publicaciones sin narrativas asignadas
+                </p>
+                <div className="text-sm mt-1 text-gray-500 dark:text-gray-500">
+                  {getTimeRangeLabel()}
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -460,15 +481,23 @@ export default function ElectoralAnalysisPage() {
         <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm p-6 opacity-0 animate-fade-in-up delay-250">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Resumen del Análisis
+            {selectedTag && (
+              <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                ({selectedTag === 'DesinfoElecciones2025' ? 'Desinformación Electoral' : 'Contenido Electoral TSE'})
+              </span>
+            )}
           </h3>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {data.totalPosts?.toLocaleString() || 0}
+                {selectedTag 
+                  ? (data.allTagCounts && data.allTagCounts[selectedTag] ? data.allTagCounts[selectedTag].toLocaleString() : '0')
+                  : (data.totalPosts?.toLocaleString() || '0')
+                }
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Total Publicaciones
+                {selectedTag ? 'Publicaciones del Tag' : 'Total Publicaciones'}
               </div>
             </div>
             
@@ -483,7 +512,10 @@ export default function ElectoralAnalysisPage() {
             
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {data.totalWithoutNarratives?.toLocaleString() || 0}
+                {selectedTag 
+                  ? (data.withoutNarratives && data.withoutNarratives[selectedTag] ? data.withoutNarratives[selectedTag].toLocaleString() : '0')
+                  : (data.totalWithoutNarratives?.toLocaleString() || '0')
+                }
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Sin Narrativas
@@ -492,8 +524,14 @@ export default function ElectoralAnalysisPage() {
             
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {data.totalWithNarratives && data.totalPosts ? 
-                  Math.round((data.totalWithNarratives / data.totalPosts) * 100) : 0}%
+                {selectedTag 
+                  ? (data.allTagCounts && data.allTagCounts[selectedTag] && data.totalWithNarratives
+                      ? Math.round((data.totalWithNarratives / data.allTagCounts[selectedTag]) * 100)
+                      : 0)
+                  : (data.totalWithNarratives && data.totalPosts 
+                      ? Math.round((data.totalWithNarratives / data.totalPosts) * 100) 
+                      : 0)
+                }%
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Cobertura
@@ -502,24 +540,34 @@ export default function ElectoralAnalysisPage() {
           </div>
           
           {/* Información adicional sobre el filtro */}
-          {(startDate || endDate) && (
-            <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>
-                  Mostrando datos para {getTimeRangeLabel()}
-                </span>
-                <button
-                  onClick={() => {
-                    setStartDate(null);
-                    setEndDate(null);
-                  }}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-                >
-                  Ver todos los datos
-                </button>
+          <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+              <span>
+                Mostrando {selectedTag ? `datos específicos de ${selectedTag === 'DesinfoElecciones2025' ? 'desinformación electoral' : 'contenido electoral TSE'}` : 'comparativa de ambos tipos'} para {getTimeRangeLabel()}
+              </span>
+              <div className="flex gap-2">
+                {selectedTag && (
+                  <button
+                    onClick={() => setSelectedTag('')}
+                    className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium"
+                  >
+                    Ver comparativa
+                  </button>
+                )}
+                {(startDate || endDate) && (
+                  <button
+                    onClick={() => {
+                      setStartDate(null);
+                      setEndDate(null);
+                    }}
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                  >
+                    Ver todos los datos
+                  </button>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
       

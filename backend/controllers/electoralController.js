@@ -126,6 +126,21 @@ class ElectoralController {
                 }
             });
 
+            // Contar TODAS las publicaciones por tag (con y sin narrativas)
+            const allTagCounts = {
+                'DesinfoElecciones2025': 0,
+                'ContenidoElecciones2025': 0
+            };
+
+            electoralPosts.forEach(post => {
+                if (post.tags.includes('DesinfoElecciones2025')) {
+                    allTagCounts['DesinfoElecciones2025']++;
+                }
+                if (post.tags.includes('ContenidoElecciones2025')) {
+                    allTagCounts['ContenidoElecciones2025']++;
+                }
+            });
+
             // Contar publicaciones SIN narrativas por etiqueta
             const withoutNarrativeCounts = {
                 'DesinfoElecciones2025': 0,
@@ -161,6 +176,7 @@ class ElectoralController {
                     desinfoNarratives: desinfoNarrativeCounts, // Conteos individuales de narrativas de desinformación
                     contenidoNarratives: contenidoNarrativeCounts, // Conteos individuales de narrativas de TSE
                     withoutNarratives: withoutNarrativeCounts,
+                    allTagCounts: allTagCounts, // NUEVO: Conteos totales por tag
                     totalPosts: electoralPosts.length,
                     totalWithNarratives: postsWithNarratives.length,
                     totalWithoutNarratives: postsWithoutNarratives.length,
