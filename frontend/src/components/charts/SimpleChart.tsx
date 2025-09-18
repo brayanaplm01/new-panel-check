@@ -23,8 +23,7 @@ interface SimpleChartProps {
 export function SimpleChart({ 
   title, 
   data, 
-  className = '', 
-  color = 'rgb(59, 130, 246)' 
+  className = ''
 }: SimpleChartProps) {
   // Mapeo exacto de las redes sociales del backend con iconos y colores
   const getSocialMediaInfo = (label: string): { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string } => {

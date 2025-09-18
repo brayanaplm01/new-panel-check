@@ -43,8 +43,7 @@ interface InteractionBarChartProps {
 export function InteractionBarChart({ 
   title, 
   data, 
-  className = '', 
-  color = 'rgb(59, 130, 246)',
+  className = '',
   maxItems = 10
 }: InteractionBarChartProps) {
   // Mapeo exacto de las redes sociales del backend con iconos y colores

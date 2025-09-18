@@ -183,7 +183,6 @@ export const useElectoralDashboard = ({
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
 
@@ -224,7 +223,6 @@ export const useElectoralDashboard = ({
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
 

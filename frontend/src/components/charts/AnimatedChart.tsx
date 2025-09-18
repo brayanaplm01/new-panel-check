@@ -158,7 +158,7 @@ export const AnimatedChart: React.FC<AnimatedChartProps> = ({ title, data, color
       <div className="space-y-3 h-[400px] overflow-y-auto pr-2">
         {Object.entries(data)
           .sort(([, a], [, b]) => b - a) // Ordenar por valor descendente
-          .map(([key, value]) => {
+          .map(([key]) => {
           const animatedValue = animatedData[key] || 0;
           const percentage = maxValue > 0 ? (animatedValue / maxValue) * 100 : 0;
           const itemInfo = getItemInfo(key, title);

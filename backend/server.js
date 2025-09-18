@@ -8,6 +8,8 @@ const Database = require('./database/init');
 const ApiPoller = require('./services/apiPoller');
 const createElectoralRoutes = require('./routes/electoral');
 const createInteractionsRoutes = require('./routes/interactions');
+const createVerificationsRoutes = require('./routes/verifications');
+const createMetricasEngagementRoutes = require('./routes/metricas_engagement');
 
 const app = express();
 const server = http.createServer(app);
@@ -509,6 +511,14 @@ async function initializeApp() {
         // Configurar rutas de interacciones
         app.use('/api/interactions', createInteractionsRoutes(database));
         console.log('Rutas de interacciones configuradas');
+
+        // Configurar rutas de verificaciones
+        app.use('/api/verifications', createVerificationsRoutes(database));
+        console.log('Rutas de verificaciones configuradas');
+
+        // Configurar rutas de métricas de engagement
+        app.use('/api/metricas-engagement', createMetricasEngagementRoutes(database));
+        console.log('Rutas de métricas de engagement configuradas');
 
         // Iniciar servidor HTTP primero
         server.listen(PORT, () => {
