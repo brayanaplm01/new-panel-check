@@ -311,7 +311,7 @@ export function DiffusionChart({ articles, timeRange, className = '' }: Diffusio
   }, [chartData]);
 
   return (
-    <div className={`bg-gray-800 dark:bg-neutral-800 rounded-xl border border-neutral-600 dark:border-neutral-700 shadow-sm flex flex-col ${className}`}>
+    <div className={`w-full bg-gray-800 dark:bg-neutral-800 rounded-xl border border-neutral-600 dark:border-neutral-700 shadow-sm flex flex-col overflow-hidden ${className}`}>
       <div className="p-6 border-b border-neutral-600 dark:border-neutral-700 bg-gray-800">{/* Header con fondo oscuro */}
         <div className="flex items-center justify-between">
           <div>
@@ -339,12 +339,14 @@ export function DiffusionChart({ articles, timeRange, className = '' }: Diffusio
         </div>
       </div>
       
-      <div className="p-4 flex-1 min-h-0">
-        <Line 
-          ref={chartRef}
-          data={chartData} 
-          options={options}
-        />
+      <div className="p-4 flex-1 min-h-0 overflow-hidden">
+        <div className="w-full h-full">
+          <Line 
+            ref={chartRef}
+            data={chartData} 
+            options={options}
+          />
+        </div>
       </div>
     </div>
   );
