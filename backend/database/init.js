@@ -91,7 +91,9 @@ class Database {
                 imita_medio TEXT,
                 medio_imitado TEXT,
                 tipo_rumor TEXT,
-                rumor_promovido TEXT
+                rumor_promovido TEXT,
+                -- Nuevo campo para las narrativas electorales
+                new_narrativas TEXT
             )
         `;
 
@@ -102,6 +104,40 @@ class Database {
                     reject(err);
                 } else {
                     console.log('Posts table created or already exists');
+                    // Después de crear la tabla, verificar si necesitamos agregar la nueva columna
+                    this.addNewNarrativasColumnIfNotExists()
+                        .then(() => resolve())
+                        .catch(reject);
+                }
+            });
+        });
+    }
+
+    async addNewNarrativasColumnIfNotExists() {
+        return new Promise((resolve, reject) => {
+            // Verificar si la columna ya existe
+            this.db.all("PRAGMA table_info(posts)", (err, columns) => {
+                if (err) {
+                    console.error('Error checking table structure:', err);
+                    reject(err);
+                    return;
+                }
+
+                const hasNewNarrativasColumn = columns.some(col => col.name === 'new_narrativas');
+
+                if (!hasNewNarrativasColumn) {
+                    console.log('🔧 Agregando columna new_narrativas a la tabla posts...');
+                    this.db.run("ALTER TABLE posts ADD COLUMN new_narrativas TEXT", (alterErr) => {
+                        if (alterErr) {
+                            console.error('Error adding new_narrativas column:', alterErr);
+                            reject(alterErr);
+                        } else {
+                            console.log('✅ Columna new_narrativas agregada exitosamente');
+                            resolve();
+                        }
+                    });
+                } else {
+                    console.log('✅ Columna new_narrativas ya existe en la tabla');
                     resolve();
                 }
             });
@@ -117,7 +153,9 @@ class Database {
             // Nuevos campos
             fue_creado_con_ia, ataca_candidato, candidato_atacado,
             ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
-            imita_medio, medio_imitado, tipo_rumor, rumor_promovido
+            imita_medio, medio_imitado, tipo_rumor, rumor_promovido,
+            // Campo para nuevas narrativas
+            new_narrativas
         } = postData;
 
         // Primero verificar si el post ya existe usando check_dbid
@@ -140,8 +178,8 @@ class Database {
                         compartidos, visualizaciones, source, check_id, check_dbid,
                         fue_creado_con_ia, ataca_candidato, candidato_atacado,
                         ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
-                        imita_medio, medio_imitado, tipo_rumor, rumor_promovido
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        imita_medio, medio_imitado, tipo_rumor, rumor_promovido, new_narrativas
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `;
                 
                 this.db.run(insertSQL, [
@@ -151,7 +189,7 @@ class Database {
                     compartidos || 0, visualizaciones || 0, source || 'check_api', check_id, check_dbid,
                     fue_creado_con_ia, ataca_candidato, candidato_atacado,
                     ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
-                    imita_medio, medio_imitado, tipo_rumor, rumor_promovido
+                    imita_medio, medio_imitado, tipo_rumor, rumor_promovido, new_narrativas
                 ], function (err) {
                     if (err) {
                         reject(err);

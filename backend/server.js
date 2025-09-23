@@ -82,7 +82,8 @@ app.get('/api/articles', async (req, res) => {
                 imita_medio: post.imita_medio,
                 medio_imitado: post.medio_imitado,
                 tipo_rumor: post.tipo_rumor,
-                rumor_promovido: post.rumor_promovido
+                rumor_promovido: post.rumor_promovido,
+                new_narrativas: post.new_narrativas
             }
         }));
 
@@ -136,7 +137,8 @@ app.get('/api/articles/:id', async (req, res) => {
                 imita_medio: post.imita_medio,
                 medio_imitado: post.medio_imitado,
                 tipo_rumor: post.tipo_rumor,
-                rumor_promovido: post.rumor_promovido
+                rumor_promovido: post.rumor_promovido,
+                new_narrativas: post.new_narrativas
             }
         };
 
@@ -302,6 +304,7 @@ app.get('/api/debug/posts', async (req, res) => {
             tags: post.tags,
             narrativa_desinformacion: post.narrativa_desinformacion,
             narrativa_tse: post.narrativa_tse,
+            new_narrativas: post.new_narrativas,
             submitted_at: post.submitted_at,
             updated_at: post.updated_at,
             created_at: post.created_at
@@ -461,6 +464,47 @@ app.post('/api/check/refresh', async (req, res) => {
         console.error('Error refreshing Check API data:', error);
         res.status(500).json({
             error: 'Error refreshing Check API data',
+            message: error.message
+        });
+    }
+});
+
+// Endpoint específico para probar detección de nuevas narrativas
+app.post('/api/check/test-narratives', async (req, res) => {
+    try {
+        if (!apiPoller || !apiPoller.checkClient) {
+            return res.status(500).json({
+                error: 'Check API client no disponible'
+            });
+        }
+
+        console.log(`🔬 Testeando detección de nuevas narrativas...`);
+        
+        // Obtener solo algunos posts para testing
+        const medias = await apiPoller.checkClient.getMedias(20, 0);
+        
+        const narrativeResults = [];
+        
+        for (const media of medias) {
+            if (media.new_narrativas) {
+                narrativeResults.push({
+                    media_id: media.check_dbid,
+                    claim: media.claim?.substring(0, 100) + '...',
+                    new_narrativas: media.new_narrativas
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Análisis completado de ${medias.length} medias`,
+            narratives_found: narrativeResults.length,
+            results: narrativeResults
+        });
+    } catch (error) {
+        console.error('Error testing narratives:', error);
+        res.status(500).json({
+            error: 'Error testing narratives',
             message: error.message
         });
     }

@@ -16,7 +16,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Usar el hook de auto-logout
   const { logout, extendSession, showWarning, remainingTime } = useAutoLogout({
-    timeoutMinutes: 3,
+    timeoutMinutes: 15,
     warningMinutes: 1,
     onLogout: () => {
       console.log('Sesión cerrada automáticamente por inactividad o cierre de ventana');

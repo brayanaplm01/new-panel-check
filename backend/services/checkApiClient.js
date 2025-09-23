@@ -161,7 +161,7 @@ class CheckApiClient {
         const searchQuery = {
             eslimit: limit,
             esoffset: offset,
-            sort: "recent_added"
+            sort: "recent_activity"  // Cambiado de "recent_added" a "recent_activity" para obtener posts con anotaciones
         };
 
         try {            
@@ -227,8 +227,6 @@ class CheckApiClient {
                         comentarios: Math.floor(baseViews * (0.01 + Math.random() * 0.03)), // 1-4% de views  
                         compartidos: Math.floor(baseViews * (0.005 + Math.random() * 0.015)) // 0.5-2% de views
                     };
-                    
-                    console.log(`🎲 Engagement generado para testing - Media ${media.dbid}:`, engagement);
                 }
             }
             
@@ -328,18 +326,11 @@ class CheckApiClient {
     }
 
     extractDataFromTasksAndAnnotations(media, engagement, redSocial, formato) {
-        console.log(`🔍 Extrayendo datos para media ${media.dbid}:`, {
-            hasTasksData: !!(media.tasks && media.tasks.edges),
-            tasksCount: media.tasks?.edges?.length || 0
-        });
-
         if (media.tasks && media.tasks.edges) {
             media.tasks.edges.forEach((taskEdge, index) => {
                 const task = taskEdge.node;
                 const label = task.label?.toLowerCase() || '';
                 const value = task.first_response_value || '';
-
-                console.log(`📝 Task ${index + 1}: "${label}" = "${value}"`);
 
                 // Buscar campos de engagement en las tasks con más variaciones
                 if (label.includes('reacciones') || label.includes('reactions') || label.includes('likes') || 
@@ -347,34 +338,28 @@ class CheckApiClient {
                     const numValue = parseInt(value) || 0;
                     if (numValue > 0) {
                         engagement.reacciones = numValue;
-                        console.log(`❤️ Reacciones encontradas: ${numValue}`);
                     }
                 } else if (label.includes('comentarios') || label.includes('comments') || label.includes('comentario')) {
                     const numValue = parseInt(value) || 0;
                     if (numValue > 0) {
                         engagement.comentarios = numValue;
-                        console.log(`💬 Comentarios encontrados: ${numValue}`);
                     }
                 } else if (label.includes('compartidos') || label.includes('shares') || label.includes('compartir') ||
                            label.includes('compartido') || label.includes('share')) {
                     const numValue = parseInt(value) || 0;
                     if (numValue > 0) {
                         engagement.compartidos = numValue;
-                        console.log(`🔄 Compartidos encontrados: ${numValue}`);
                     }
                 } else if (label.includes('visualizaciones') || label.includes('views') || label.includes('vistas') ||
                            label.includes('visualización') || label.includes('vista') || label.includes('reproducciones')) {
                     const numValue = parseInt(value) || 0;
                     if (numValue > 0) {
                         engagement.visualizaciones = numValue;
-                        console.log(`👁️ Visualizaciones encontradas: ${numValue}`);
                     }
                 } else if (label.includes('red social') || label.includes('plataforma') || label.includes('platform')) {
                     redSocial = this.mapSocialNetwork(value) || redSocial;
-                    console.log(`📱 Red social detectada: ${redSocial}`);
                 } else if (label.includes('formato') || label.includes('format') || label.includes('tipo')) {
                     formato = this.mapFormat(value) || formato;
-                    console.log(`📄 Formato detectado: ${formato}`);
                 }
             });
 
@@ -412,8 +397,6 @@ class CheckApiClient {
             compartidos: engagement.compartidos,
             visualizaciones: engagement.visualizaciones
         };
-
-        console.log(`📈 Engagement final para media ${media.dbid}:`, finalEngagement);
 
         return { engagement, redSocial, formato };
     }
@@ -495,8 +478,27 @@ class CheckApiClient {
             imita_medio: null,
             medio_imitado: null,
             tipo_rumor: null,
-            rumor_promovido: null
+            rumor_promovido: null,
+            new_narrativas: null
         };
+
+        // Lista de las nuevas narrativas electorales
+        const narrativasElectorales = [
+            'Se está orquestando un fraude electoral',
+            'Dudas sobre el proceso electoral',
+            'Campañas financiadas por terceros',
+            'Candidatos y partidos ligados al MAS o a Evo Morales',
+            'Ataques a candidatos o a partidos políticos',
+            'Supuesto apoyo a candidatos o partidos políticos',
+            'Tendencias de intención de voto (encuestas)',
+            'Resistencia hostil',
+            'Voto nulo',
+            'Conteo preliminar de votos',
+            'Promesas de campaña',
+            'Escenarios postelectorales',
+            'FIMI',
+            'Padrón electoral'
+        ];
 
         if (media.tasks && media.tasks.edges) {
             media.tasks.edges.forEach((taskEdge) => {
@@ -504,28 +506,70 @@ class CheckApiClient {
                 const label = task.label?.toLowerCase() || '';
                 const value = task.first_response_value || '';
 
+                // También buscar en las responses si first_response_value está vacío
+                let responseValue = value;
+                if (!responseValue && task.responses && task.responses.edges && task.responses.edges.length > 0) {
+                    // Buscar en todas las responses, no solo la primera
+                    for (const responseEdge of task.responses.edges) {
+                        const content = responseEdge.node?.content;
+                        if (content && content.trim()) {
+                            responseValue = content.trim();
+                            break;
+                        }
+                    }
+                }
+
                 if (label.includes('fue creado con ia') || label.includes('creado con ia')) {
-                    schemaData.fue_creado_con_ia = this.normalizeYesNoField(value);
+                    schemaData.fue_creado_con_ia = this.normalizeYesNoField(responseValue);
                 } else if (label.includes('ataca a un candidato') || label.includes('ataca candidato')) {
-                    schemaData.ataca_candidato = this.normalizeYesNoField(value);
+                    schemaData.ataca_candidato = this.normalizeYesNoField(responseValue);
                 } else if (label.includes('qué candidato') || label.includes('que candidato')) {
-                    schemaData.candidato_atacado = value;
+                    schemaData.candidato_atacado = responseValue;
                 } else if (label.includes('ataca al tse') || label.includes('ataca tse') || label.includes('proceso electoral')) {
-                    schemaData.ataca_tse = this.normalizeYesNoField(value);
+                    schemaData.ataca_tse = this.normalizeYesNoField(responseValue);
                 } else if (label.includes('narrativa') && label.includes('tse')) {
-                    schemaData.narrativa_tse = value;
+                    schemaData.narrativa_tse = responseValue;
                 } else if (label.includes('es caso es') || label.includes('caso es')) {
-                    schemaData.es_caso_es = this.normalizeCaseType(value);
+                    schemaData.es_caso_es = this.normalizeCaseType(responseValue);
                 } else if (label.includes('narrativa de desinformación') || label.includes('narrativa de desinformacion')) {
-                    schemaData.narrativa_desinformacion = value;
+                    schemaData.narrativa_desinformacion = responseValue;
                 } else if (label.includes('imita a un medio') || label.includes('imita medio')) {
-                    schemaData.imita_medio = this.normalizeYesNoField(value);
+                    schemaData.imita_medio = this.normalizeYesNoField(responseValue);
                 } else if (label.includes('qué medio') || label.includes('que medio')) {
-                    schemaData.medio_imitado = value;
+                    schemaData.medio_imitado = responseValue;
                 } else if (label.includes('tipo de rumor') || label.includes('tipo rumor')) {
-                    schemaData.tipo_rumor = value;
+                    schemaData.tipo_rumor = responseValue;
                 } else if (label.includes('rumor que se promueve') || label.includes('rumor promueve')) {
-                    schemaData.rumor_promovido = value;
+                    schemaData.rumor_promovido = responseValue;
+                } else if (label.includes('qué narrativa promueve') || label.includes('que narrativa promueve') || 
+                          label.includes('narrativa promueve')) {
+                    // Este es el campo clave: "¿qué narrativa promueve el contenido?"
+                    if (responseValue && responseValue.trim()) {
+                        // Verificar si el valor coincide con alguna de las nuevas narrativas
+                        const matchedNarrativa = narrativasElectorales.find(narrativa => 
+                            responseValue.toLowerCase().includes(narrativa.toLowerCase()) ||
+                            narrativa.toLowerCase().includes(responseValue.toLowerCase())
+                        );
+                        if (matchedNarrativa) {
+                            schemaData.new_narrativas = matchedNarrativa;
+                        } else {
+                            schemaData.new_narrativas = responseValue;
+                        }
+                    }
+                } else if (label.includes('nueva narrativa') || label.includes('narrativa electoral') || 
+                          label.includes('new narrativa') || label.includes('narrativa nueva')) {
+                    // Backup para otros posibles campos de narrativas
+                    if (responseValue && responseValue.trim()) {
+                        const matchedNarrativa = narrativasElectorales.find(narrativa => 
+                            responseValue.toLowerCase().includes(narrativa.toLowerCase()) ||
+                            narrativa.toLowerCase().includes(responseValue.toLowerCase())
+                        );
+                        if (matchedNarrativa) {
+                            schemaData.new_narrativas = matchedNarrativa;
+                        } else {
+                            schemaData.new_narrativas = responseValue;
+                        }
+                    }
                 }
             });
         }
