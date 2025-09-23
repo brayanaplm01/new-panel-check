@@ -1,4 +1,7 @@
-export default function SettingsPage() {
+import { SidebarLayout } from '@/components/layouts/SideBar';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+
+function SettingsPageContent() {
   return (
     <div className="w-full">
       <div className="mb-8">
@@ -100,5 +103,16 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrapper con SidebarLayout
+export default function SettingsPage() {
+  return (
+    <AuthGuard>
+      <SidebarLayout>
+        <SettingsPageContent />
+      </SidebarLayout>
+    </AuthGuard>
   );
 }

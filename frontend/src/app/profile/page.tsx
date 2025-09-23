@@ -1,6 +1,8 @@
 import Image from 'next/image';
+import { SidebarLayout } from '@/components/layouts/SideBar';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   return (
     <div className="w-full">
       <div className="mb-8">
@@ -96,5 +98,16 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrapper con SidebarLayout
+export default function ProfilePage() {
+  return (
+    <AuthGuard>
+      <SidebarLayout>
+        <ProfilePageContent />
+      </SidebarLayout>
+    </AuthGuard>
   );
 }

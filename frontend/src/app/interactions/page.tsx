@@ -8,12 +8,14 @@ import { DatePicker } from '@/components/ui/DatePicker';
 import { IconRefresh, IconTrendingUp, IconCalendar, IconFilter } from '@tabler/icons-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { SidebarLayout } from '@/components/layouts/SideBar';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
-export default function InteractionsPage() {
+function InteractionsPageContent() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { stats, loading, error, lastUpdated, fetchStats, setFilterDate, filterDate } = useInteractionStats({
     autoRefresh: true,
-    refreshInterval: 60000,
+    refreshInterval: 60000, // 1 minuto
     filterDate: selectedDate
   });
 
@@ -381,5 +383,16 @@ export default function InteractionsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Wrapper con SidebarLayout
+export default function InteractionsPage() {
+  return (
+    <AuthGuard>
+      <SidebarLayout>
+        <InteractionsPageContent />
+      </SidebarLayout>
+    </AuthGuard>
   );
 }

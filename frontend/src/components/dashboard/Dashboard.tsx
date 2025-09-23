@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useArticles } from '@/hooks/useArticles';
 import { useVerifications } from '@/hooks/useVerifications';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
@@ -14,8 +14,54 @@ export default function Dashboard() {
     error: verificationsError,
     isConnected: verificationsConnected 
   } = useVerifications();
+  
+  // Estados para controlar el indicador de actualización
+  const [showUpdating, setShowUpdating] = useState(false);
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const previousLoadingRef = useRef({ loading: false, verificationsLoading: false });
 
-  if (loading || verificationsLoading) {
+  // Efecto para controlar el indicador de actualización
+  useEffect(() => {
+    const hasData = (articles?.length > 0 || verificationStats);
+    const isCurrentlyLoading = (loading || verificationsLoading);
+    const wasNotLoading = !previousLoadingRef.current.loading && !previousLoadingRef.current.verificationsLoading;
+    
+    // Si cambió de no-loading a loading Y hay datos previos
+    if (isCurrentlyLoading && wasNotLoading && hasData) {
+      // Limpiar timer anterior si existe
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+      
+      setShowUpdating(true);
+      console.log('🔄 Mostrando indicador "Actualizando Sistema"');
+      
+      // Configurar nuevo timer para ocultar después de 3 segundos
+      updateTimerRef.current = setTimeout(() => {
+        setShowUpdating(false);
+        console.log('✅ Ocultando indicador después de 3 segundos');
+        updateTimerRef.current = null;
+      }, 3000);
+    }
+    
+    // Actualizar referencia del estado anterior
+    previousLoadingRef.current = { loading, verificationsLoading };
+  }, [loading, verificationsLoading, articles?.length, verificationStats]);
+
+  // Limpiar timer al desmontar
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Solo mostrar pantalla de carga en la primera carga (cuando no hay datos aún)
+  const isInitialLoading = (loading && (!articles || articles.length === 0)) || 
+                          (verificationsLoading && !verificationStats);
+
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -50,10 +96,19 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold text-white">Panel de Control</h1>
           <p className="text-sm text-white">Monitoreo de verificaciones y desinformación</p>
         </div>
-        <ConnectionStatus 
-          isConnected={isConnected && verificationsConnected} 
-          lastUpdated={lastUpdated} 
-        />
+        <div className="flex items-center gap-3">
+          {/* Indicador de actualización */}
+          {showUpdating && (
+            <div className="flex items-center gap-2 bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-sm">
+              <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-400 border-t-transparent"></div>
+              Actualizando Sistema
+            </div>
+          )}
+          <ConnectionStatus 
+            isConnected={isConnected && verificationsConnected} 
+            lastUpdated={lastUpdated} 
+          />
+        </div>
       </div>
 
       {/* Estadísticas de engagement - Más compactas */}

@@ -7,8 +7,10 @@ import { InteractionBarChart } from '@/components/charts/InteractionBarChart';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { SidebarLayout } from '@/components/layouts/SideBar';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
-export default function ElectoralAnalysisPage() {
+function ElectoralAnalysisPageContent() {
   const { data, loading, error, lastUpdated, fetchData } = useElectoralAnalysis();
   
   // Estados para los filtros
@@ -579,5 +581,16 @@ export default function ElectoralAnalysisPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Wrapper con SidebarLayout
+export default function ElectoralAnalysisPage() {
+  return (
+    <AuthGuard>
+      <SidebarLayout>
+        <ElectoralAnalysisPageContent />
+      </SidebarLayout>
+    </AuthGuard>
   );
 }

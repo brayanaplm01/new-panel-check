@@ -1,12 +1,14 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { IconRefresh, IconEye, IconExternalLink, IconFilter, IconSearch, IconPlus, IconCalendar } from '@tabler/icons-react';
 import { useArticles } from '@/hooks/useArticles';
 import { ConnectionStatus } from '@/components/ui/ConnectionStatus';
 import { DiffusionChart } from '@/components/charts/DiffusionChart';
 import { EngagementStats } from '@/components/charts/EngagementStats';
+import { SidebarLayout } from '@/components/layouts/SideBar';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
-export default function PostCheckPage() {
+function PostCheckPageContent() {
   const { 
     articles, 
     loading, 
@@ -32,7 +34,48 @@ export default function PostCheckPage() {
     language: 'es'
   });
 
+  // Estados para controlar el indicador de actualización
+  const [showUpdating, setShowUpdating] = useState(false);
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const previousLoadingRef = useRef(false);
+
   const itemsPerPage = 5;
+
+  // Efecto para controlar el indicador de actualización
+  useEffect(() => {
+    const hasData = articles.length > 0;
+    const wasNotLoading = !previousLoadingRef.current;
+    
+    // Si cambió de no-loading a loading Y hay artículos previos
+    if (loading && wasNotLoading && hasData) {
+      // Limpiar timer anterior si existe
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+      
+      setShowUpdating(true);
+      console.log('🔄 Mostrando indicador "Actualizando Sistema" en Post-Check');
+      
+      // Configurar nuevo timer para ocultar después de 3 segundos
+      updateTimerRef.current = setTimeout(() => {
+        setShowUpdating(false);
+        console.log('✅ Ocultando indicador después de 3 segundos en Post-Check');
+        updateTimerRef.current = null;
+      }, 3000);
+    }
+    
+    // Actualizar referencia del estado anterior
+    previousLoadingRef.current = loading;
+  }, [loading, articles.length]);
+
+  // Limpiar timer al desmontar
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleCreateArticle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +169,7 @@ export default function PostCheckPage() {
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
             <p className="text-gray-600 dark:text-gray-400">
-              Gestión de artículos de CheckMedia
+              Gestión de artículos de PanelCheck
             </p>
             <ConnectionStatus 
               isConnected={isConnected} 
@@ -171,14 +214,14 @@ export default function PostCheckPage() {
                 console.log('Refresh result:', result);
                 fetchArticles(); // Refresh the local data
               } catch (error) {
-                console.error('Error refreshing from CheckMedia:', error);
+                console.error('Error refreshing from PanelCheck:', error);
               }
             }}
             className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
-            title="Sincronizar desde CheckMedia"
+            title="Sincronizar desde PanelCheck"
           >
             <IconRefresh className="h-4 w-4" />
-            Sync CheckMedia
+            Sync PanelCheck
           </button>
         </div>
       </div>
@@ -544,12 +587,23 @@ export default function PostCheckPage() {
       )}
 
       {/* Loading indicator during refresh */}
-      {loading && articles.length > 0 && (
+      {showUpdating && (
         <div className="fixed bottom-4 right-4 bg-blue-500 text-white p-3 rounded-lg shadow-lg flex items-center gap-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          <span className="text-sm">Actualizando...</span>
+          <span className="text-sm">Actualizando Sistema</span>
         </div>
       )}
     </div>
+  );
+}
+
+// Wrapper con SidebarLayout
+export default function PostCheckPage() {
+  return (
+    <AuthGuard>
+      <SidebarLayout>
+        <PostCheckPageContent />
+      </SidebarLayout>
+    </AuthGuard>
   );
 }

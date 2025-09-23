@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "../ui/sidebar";
 import {
   IconArrowLeft,
@@ -8,9 +8,11 @@ import {
   IconUserBolt,
   IconFileText,
   IconChartBar,
+  IconLogout,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -19,6 +21,31 @@ interface SidebarLayoutProps {
 import Image from 'next/image';
 
 export function SidebarLayout({ children }: SidebarLayoutProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  // Obtener usuario del localStorage (simplificado)
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+
+  // Verificar localStorage al cargar
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    // Limpiar localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('user');
+    }
+    router.push('/login');
+  };
+
   const links = [
     {
       label: "Dashboard",
@@ -62,15 +89,8 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
         <IconSettings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
-    {
-      label: "Logout",
-      href: "/logout",
-      icon: (
-        <IconArrowLeft className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-    },
   ];
-  const [open, setOpen] = useState(false);
+  
   return (
     <div
       className={cn(
@@ -88,11 +108,11 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
               ))}
             </div>
           </div>
-          <div>
+          <div className="flex flex-col gap-2">
             <SidebarLink
               link={{
-                label: "Usuario",
-                href: "#",
+                label: user?.name || "Usuario",
+                href: "/profile",
                 icon: (
                   <Image
                     src="/avatars/default-user.svg"
@@ -104,6 +124,13 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
                 ),
               }}
             />
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 p-2 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-colors"
+            >
+              <IconLogout className="h-5 w-5 shrink-0" />
+              {open && <span>Cerrar Sesión</span>}
+            </button>
           </div>
         </SidebarBody>
       </Sidebar>

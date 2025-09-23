@@ -30,7 +30,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/a
 
 export const useInteractionStats = ({ 
   autoRefresh = true, 
-  refreshInterval = 60000, 
+  refreshInterval = 60000, // 1 minuto 
   filterDate = null 
 }: UseInteractionStatsOptions = {}): UseInteractionStatsReturn => {
   const [stats, setStats] = useState<InteractionStats | null>(null);
