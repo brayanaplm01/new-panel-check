@@ -38,13 +38,15 @@ interface InteractionBarChartProps {
   className?: string;
   color?: string;
   maxItems?: number;
+  useElectoralColors?: boolean; // Nueva prop para activar colores electorales
 }
 
 export function InteractionBarChart({ 
   title, 
   data, 
   className = '',
-  maxItems = 10
+  maxItems = 10,
+  useElectoralColors = false
 }: InteractionBarChartProps) {
   // Mapeo exacto de las redes sociales del backend con iconos y colores
   const getSocialMediaInfo = (label: string): { icon: React.ComponentType<{ size?: number; className?: string }>, color: string, bgColor: string } => {
@@ -90,16 +92,45 @@ export function InteractionBarChart({
     });
     const values = sortedEntries.map(([, value]) => value);
 
-    // Crear colores dinámicos basados en redes sociales
-    const backgroundColors = sortedEntries.map(([label]) => {
-      const socialInfo = getSocialMediaInfo(label);
-      return socialInfo.color.replace('#', 'rgba(').replace(/(.{2})(.{2})(.{2})/, '$1, $2, $3, 0.1)');
-    });
+    // Crear colores dinámicos
+    let backgroundColors: string[];
+    let borderColors: string[];
 
-    const borderColors = sortedEntries.map(([label]) => {
-      const socialInfo = getSocialMediaInfo(label);
-      return socialInfo.color;
-    });
+    if (useElectoralColors) {
+      // Esquema de colores para narrativas electorales
+      const maxValue = Math.max(...values);
+      
+      backgroundColors = values.map(value => {
+        if (value === maxValue && value > 0) {
+          // Rojo para el valor más alto
+          return 'rgba(239, 68, 68, 0.2)'; // red-500 with opacity
+        } else {
+          // Azul claro para los demás
+          return 'rgba(59, 130, 246, 0.2)'; // blue-500 with opacity
+        }
+      });
+
+      borderColors = values.map(value => {
+        if (value === maxValue && value > 0) {
+          // Rojo para el valor más alto
+          return 'rgb(239, 68, 68)'; // red-500
+        } else {
+          // Azul claro para los demás
+          return 'rgb(59, 130, 246)'; // blue-500
+        }
+      });
+    } else {
+      // Colores originales basados en redes sociales
+      backgroundColors = sortedEntries.map(([label]) => {
+        const socialInfo = getSocialMediaInfo(label);
+        return socialInfo.color.replace('#', 'rgba(').replace(/(.{2})(.{2})(.{2})/, '$1, $2, $3, 0.1)');
+      });
+
+      borderColors = sortedEntries.map(([label]) => {
+        const socialInfo = getSocialMediaInfo(label);
+        return socialInfo.color;
+      });
+    }
 
     return {
       labels,
@@ -115,7 +146,7 @@ export function InteractionBarChart({
         },
       ],
     };
-  }, [data, maxItems]);
+  }, [data, maxItems, useElectoralColors]);
 
   const options = useMemo(() => ({
     responsive: true,

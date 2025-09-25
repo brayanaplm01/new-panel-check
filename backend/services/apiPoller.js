@@ -9,8 +9,6 @@ class ApiPoller {
         this.isRunning = false;
         this.lastCheck = new Date();
 
-        console.log('🔧 Check API poller inicializando...');
-
         this.checkClient = new CheckApiClient(
             config.check.token,
             config.check.teamSlug,
@@ -20,12 +18,10 @@ class ApiPoller {
 
     async start() {
         if (this.isRunning) {
-            console.log('Poller ya está ejecutándose');
             return;
         }
 
         this.isRunning = true;
-        console.log(`🌐 Iniciando Check API poller con intervalo de ${config.check.interval}ms`);
 
         // Primera ejecución inmediata
         await this.poll();
@@ -50,12 +46,9 @@ class ApiPoller {
 
     async poll() {
         try {
-            console.log('Polling Check API...');
             const currentApiData = await this.checkClient.getMedias(100, 0);
 
             if (currentApiData && currentApiData.length > 0) {
-                console.log(`✅ Check API devolvió ${currentApiData.length} medias`);
-                
                 // 1. Guardar/actualizar posts nuevos o existentes
                 const savedPosts = await this.saveNewData(currentApiData);
 
@@ -64,7 +57,7 @@ class ApiPoller {
 
                 // 3. Emitir solo posts verdaderamente nuevos
                 if (savedPosts.length > 0) {
-                    console.log(`${savedPosts.length} nuevos posts guardados`);
+                    const newPosts = savedPosts.filter(p => p.isNew).length;
                     this.emitCallback(savedPosts);
                 }
             }
@@ -109,11 +102,16 @@ class ApiPoller {
                 const processedPost = this.processDataItem(item);
                 const result = await this.database.insertPost(processedPost);
 
-                if (result.isNew) {
+                // Incluir tanto posts nuevos como actualizados
+                if (result.isNew || result.isUpdated) {
                     savedPosts.push({
                         ...processedPost,
-                        id: result.id
+                        id: result.id,
+                        isNew: result.isNew,
+                        isUpdated: result.isUpdated
                     });
+                    
+
                 }
 
             } catch (error) {

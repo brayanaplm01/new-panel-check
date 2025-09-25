@@ -62,12 +62,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await new Promise<{ success: boolean; user?: User; token?: string }>((resolve) => {
         setTimeout(() => {
           // Credenciales de demo - en producción esto vendría del backend
-          if (email === 'admin@checkmedia.com' && password === 'admin123') {
+          if (email === 'admin' && password === 'pass') {
             resolve({
               success: true,
               user: {
                 id: '1',
-                email: 'admin@checkmedia.com',
+                email: 'admin',
                 name: 'Administrador',
                 role: 'admin'
               },

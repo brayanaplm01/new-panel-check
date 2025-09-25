@@ -59,8 +59,8 @@ export default function LoginPage() {
 
   const fillDemoCredentials = (type: 'admin' | 'user') => {
     if (type === 'admin') {
-      setEmail('admin@checkmedia.com');
-      setPassword('admin123');
+      setEmail('admin');
+      setPassword('pass');
     } else {
       setEmail('usuario@checkmedia.com');
       setPassword('user123');
@@ -121,7 +121,7 @@ export default function LoginPage() {
                   onClick={() => fillDemoCredentials('admin')}
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  admin@checkmedia.com / admin123
+                  admin / pass
                 </button>
               </div>
               <div className="flex justify-between items-center">

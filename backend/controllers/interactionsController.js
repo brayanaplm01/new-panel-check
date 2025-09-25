@@ -8,8 +8,6 @@ class InteractionsController {
             const { date } = req.query;
             let allPosts;
             
-            console.log('📅 Filtering by date:', date);
-            
             if (date) {
                 // Filtrar por fecha específica
                 const targetDate = new Date(date + 'T00:00:00.000Z');
@@ -18,14 +16,8 @@ class InteractionsController {
                 endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
                 endOfDay.setUTCMilliseconds(-1); // 23:59:59.999 del día
                 
-                console.log('🔍 Date range:', {
-                    startOfDay: startOfDay.toISOString(),
-                    endOfDay: endOfDay.toISOString()
-                });
-                
                 // Obtener todos los posts y filtrar por fecha
                 const allPostsData = await this.database.getPosts(10000, 0);
-                console.log('📊 Total posts before filtering:', allPostsData.length);
                 
                 allPosts = allPostsData.filter(post => {
                     if (!post.submitted_at) return false;

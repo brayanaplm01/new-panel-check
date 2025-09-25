@@ -27,16 +27,28 @@ export function AuthGuard({ children }: AuthGuardProps) {
   console.log('🔍 AuthGuard state:', { showWarning, remainingTime, isAuthenticated });
 
   useEffect(() => {
-    // Verificar si hay sesión activa
+    // Verificar si hay sesión activa al cargar la página
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const userInfo = localStorage.getItem('user');
     
-    if (!isLoggedIn || isLoggedIn !== 'true') {
-      // Si no hay sesión, redirigir al login
+    if (!isLoggedIn || isLoggedIn !== 'true' || !userInfo) {
+      // Si no hay sesión válida, redirigir al login
+      console.log('❌ No hay sesión válida, redirigiendo al login');
       router.push('/login');
     } else {
-      // Si hay sesión, mostrar el contenido
-      setIsAuthenticated(true);
-      setIsLoading(false);
+      // Si hay sesión válida, verificar que no haya expirado
+      try {
+        const user = JSON.parse(userInfo);
+        console.log('✅ Sesión válida encontrada para:', user.name);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+      } catch {
+        // Si hay error al parsear la información del usuario, limpiar y redirigir
+        console.log('⚠️ Error al parsear información de usuario, limpiando sesión');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('user');
+        router.push('/login');
+      }
     }
   }, [router]);
 

@@ -8,8 +8,6 @@ class VerificationsController {
             const { date, startDate, endDate } = req.query;
             let allPosts;
             
-            console.log('📅 Filtering verifications by date range:', { date, startDate, endDate });
-            
             // Obtener todos los posts
             const allPostsData = await this.database.getPosts(10000, 0);
             
@@ -40,8 +38,6 @@ class VerificationsController {
                 // Sin filtro - todos los posts
                 allPosts = allPostsData;
             }
-            
-            console.log('📊 Posts after filtering:', allPosts.length);
             
             // Estadísticas básicas de verificaciones
             const verificationStats = {

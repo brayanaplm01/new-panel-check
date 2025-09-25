@@ -17,7 +17,7 @@ export default function LoginPage() {
 
     // Simular autenticación simple - Solo usuario admin
     setTimeout(() => {
-      if (email === 'admin@checkmedia.com' && password === 'admin123') {
+      if (email === 'admin' && password === 'pass') {
         // Guardar en localStorage para mantener la sesión
         if (typeof window !== 'undefined') {
           localStorage.setItem('isLoggedIn', 'true');
@@ -62,7 +62,7 @@ export default function LoginPage() {
                 Correo electrónico
               </label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"

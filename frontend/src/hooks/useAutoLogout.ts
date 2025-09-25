@@ -11,7 +11,7 @@ interface UseAutoLogoutOptions {
 }
 
 export function useAutoLogout(options: UseAutoLogoutOptions = {}) {
-  const { timeoutMinutes = 30, warningMinutes = 5, onLogout, onWarning } = options;
+  const { timeoutMinutes = 15, warningMinutes = 1, onLogout, onWarning } = options;
   const router = useRouter();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -179,43 +179,43 @@ export function useAutoLogout(options: UseAutoLogoutOptions = {}) {
     };
   }, [resetInactivityTimer]);
 
-  // Auto-logout al cerrar ventana/pestaña
+  // Manejo de visibilidad de pestaña para detectar inactividad prolongada
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      // Cerrar sesión al cerrar la ventana
-      logout();
-    };
-
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // La pestaña se ocultó (puede ser que se cerró)
-        // Nota: No podemos detectar cierre real, pero esto ayuda con cambio de pestañas
+        // La pestaña se ocultó - guardar timestamp para verificar tiempo transcurrido
         localStorage.setItem('lastActiveTime', Date.now().toString());
+        console.log('🔍 Pestaña oculta, guardando tiempo de última actividad');
       } else {
-        // La pestaña volvió a ser visible
+        // La pestaña volvió a ser visible - verificar si ha pasado demasiado tiempo
         const lastActiveTime = localStorage.getItem('lastActiveTime');
         if (lastActiveTime) {
           const timeDiff = Date.now() - parseInt(lastActiveTime);
           const minutesDiff = timeDiff / (1000 * 60);
           
+          console.log(`🔍 Pestaña visible, tiempo transcurrido: ${minutesDiff.toFixed(1)} minutos`);
+          
           // Si ha pasado más tiempo del permitido, cerrar sesión
           if (minutesDiff > timeoutMinutes) {
+            console.log('⏰ Tiempo límite excedido, cerrando sesión');
             logout();
           } else {
             // Resetear timer si está dentro del tiempo permitido
+            console.log('✅ Tiempo dentro del límite, reseteando timer');
             resetInactivityTimer();
           }
+        } else {
+          // Si no hay tiempo guardado, simplemente resetear timer
+          resetInactivityTimer();
         }
       }
     };
 
-    // Agregar listeners
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    // Solo agregar listener de visibilidad (NO beforeunload para evitar logout en recarga)
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Cleanup
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [logout, timeoutMinutes, resetInactivityTimer]);

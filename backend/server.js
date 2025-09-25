@@ -430,7 +430,6 @@ app.post('/api/check/refresh', async (req, res) => {
         }
 
         const limit = parseInt(req.body.limit) || 1000;
-        console.log(`🔄 Refrescando datos desde Check API con límite: ${limit}`);
         
         const medias = await apiPoller.checkClient.getMedias(limit, 0);
 
@@ -478,8 +477,6 @@ app.post('/api/check/test-narratives', async (req, res) => {
             });
         }
 
-        console.log(`🔬 Testeando detección de nuevas narrativas...`);
-        
         // Obtener solo algunos posts para testing
         const medias = await apiPoller.checkClient.getMedias(20, 0);
         
@@ -546,23 +543,18 @@ async function initializeApp() {
     try {
         // Inicializar base de datos
         await database.init(false);
-        console.log('Base de datos inicializada');
 
         // Configurar rutas electorales
         app.use('/api/electoral', createElectoralRoutes(database));
-        console.log('Rutas electorales configuradas');
 
         // Configurar rutas de interacciones
         app.use('/api/interactions', createInteractionsRoutes(database));
-        console.log('Rutas de interacciones configuradas');
 
         // Configurar rutas de verificaciones
         app.use('/api/verifications', createVerificationsRoutes(database));
-        console.log('Rutas de verificaciones configuradas');
 
         // Configurar rutas de métricas de engagement
         app.use('/api/metricas-engagement', createMetricasEngagementRoutes(database));
-        console.log('Rutas de métricas de engagement configuradas');
 
         // Iniciar servidor HTTP primero
         server.listen(PORT, () => {
@@ -572,7 +564,6 @@ async function initializeApp() {
 
         // Inicializar poller de API en segundo plano
         apiPoller = new ApiPoller(database, emitNewData);
-        console.log('🔧 Iniciando poller de API en segundo plano...');
         
         // No esperar a que termine el polling inicial
         apiPoller.start().then(() => {

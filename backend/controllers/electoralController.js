@@ -52,20 +52,11 @@ class ElectoralController {
             electoralPosts.forEach(post => {
                 let hasNarrative = false;
                 
-                if (post.tags.includes('DesinfoElecciones2025')) {
-                    if (post.narrativa_desinformacion && 
-                        post.narrativa_desinformacion.trim() !== '' && 
-                        post.narrativa_desinformacion !== 'null') {
-                        hasNarrative = true;
-                    }
-                }
-                
-                if (post.tags.includes('ContenidoElecciones2025')) {
-                    if (post.narrativa_tse && 
-                        post.narrativa_tse.trim() !== '' && 
-                        post.narrativa_tse !== 'null') {
-                        hasNarrative = true;
-                    }
+                // Usar solo el campo new_narrativas para todos los tags
+                if (post.new_narrativas && 
+                    post.new_narrativas.trim() !== '' && 
+                    post.new_narrativas !== 'null') {
+                    hasNarrative = true;
                 }
                 
                 if (hasNarrative) {
@@ -86,43 +77,68 @@ class ElectoralController {
                 'ContenidoElecciones2025': {}
             };
 
-            // Conteos específicos por cada narrativa de DesinfoElecciones2025
+            // Lista completa de todas las narrativas electorales
+            const allNarratives = [
+                'Se está orquestando un fraude electoral',
+                'Dudas sobre el proceso electoral',
+                'Campañas financiadas por terceros',
+                'Candidatos y partidos ligados al MAS o a Evo Morales',
+                'Ataques a candidatos o a partidos políticos',
+                'Supuesto apoyo a candidatos o partidos políticos',
+                'Tendencias de intención de voto (encuestas)',
+                'Resistencia hostil',
+                'Voto nulo',
+                'Conteo preliminar de votos',
+                'Promesas de campaña',
+                'Escenarios postelectorales',
+                'FIMI',
+                'Padrón electoral'
+            ];
+
+            // Inicializar conteos específicos con todas las narrativas en 0
             const desinfoNarrativeCounts = {};
-            
-            // Conteos específicos por cada narrativa de ContenidoElecciones2025 (TSE)
             const contenidoNarrativeCounts = {};
+            
+            // Inicializar todas las narrativas con 0
+            allNarratives.forEach(narrative => {
+                desinfoNarrativeCounts[narrative] = 0;
+                contenidoNarrativeCounts[narrative] = 0;
+            });
 
             postsWithNarratives.forEach(post => {
+                // Procesar narrativas del campo new_narrativas para ambos tags
+                if (post.new_narrativas) {
+                    const narrativesText = post.new_narrativas.trim();
+                    if (narrativesText && narrativesText !== 'null') {
+                        // Separar narrativas por comas y procesar cada una
+                        const individualNarratives = narrativesText.split(',').map(n => n.trim());
+                        
+                        individualNarratives.forEach(narrative => {
+                            if (narrative && allNarratives.includes(narrative)) {
+                                // Contar para el tag correspondiente
+                                if (post.tags.includes('DesinfoElecciones2025')) {
+                                    desinfoNarrativeCounts[narrative]++;
+                                    narrativeDetails['DesinfoElecciones2025'][narrative] = 
+                                        (narrativeDetails['DesinfoElecciones2025'][narrative] || 0) + 1;
+                                }
+                                
+                                if (post.tags.includes('ContenidoElecciones2025')) {
+                                    contenidoNarrativeCounts[narrative]++;
+                                    narrativeDetails['ContenidoElecciones2025'][narrative] = 
+                                        (narrativeDetails['ContenidoElecciones2025'][narrative] || 0) + 1;
+                                }
+                            }
+                        });
+                    }
+                }
+                
+                // Contar posts por tag
                 if (post.tags.includes('DesinfoElecciones2025')) {
                     counts['DesinfoElecciones2025']++;
-                    
-                    if (post.narrativa_desinformacion) {
-                        const narrative = post.narrativa_desinformacion.trim();
-                        if (narrative && narrative !== 'null') {
-                            // Contar cada narrativa individual
-                            desinfoNarrativeCounts[narrative] = (desinfoNarrativeCounts[narrative] || 0) + 1;
-                            
-                            // Mantener detalles para compatibilidad
-                            narrativeDetails['DesinfoElecciones2025'][narrative] = 
-                                (narrativeDetails['DesinfoElecciones2025'][narrative] || 0) + 1;
-                        }
-                    }
                 }
                 
                 if (post.tags.includes('ContenidoElecciones2025')) {
                     counts['ContenidoElecciones2025']++;
-                    
-                    if (post.narrativa_tse) {
-                        const narrative = post.narrativa_tse.trim();
-                        if (narrative && narrative !== 'null') {
-                            // Contar cada narrativa individual de TSE
-                            contenidoNarrativeCounts[narrative] = (contenidoNarrativeCounts[narrative] || 0) + 1;
-                            
-                            // Mantener detalles para compatibilidad
-                            narrativeDetails['ContenidoElecciones2025'][narrative] = 
-                                (narrativeDetails['ContenidoElecciones2025'][narrative] || 0) + 1;
-                        }
-                    }
                 }
             });
 
@@ -155,18 +171,6 @@ class ElectoralController {
                     withoutNarrativeCounts['ContenidoElecciones2025']++;
                 }
             });
-
-            console.log(`📊 Análisis Electoral (${fechaInicio.toISOString().split('T')[0]} - ${fechaFin.toISOString().split('T')[0]}):`);
-            console.log(`- Posts totales en rango: ${postsInDateRange.length}`);
-            console.log(`- Posts con etiquetas electorales: ${electoralPosts.length}`);
-            console.log(`- Posts CON narrativas: ${postsWithNarratives.length}`);
-            console.log(`- Posts SIN narrativas: ${postsWithoutNarratives.length}`);
-            console.log(`- DesinfoElecciones2025 con narrativa: ${counts['DesinfoElecciones2025']}`);
-            console.log(`- ContenidoElecciones2025 con narrativa: ${counts['ContenidoElecciones2025']}`);
-            console.log(`- DesinfoElecciones2025 sin narrativa: ${withoutNarrativeCounts['DesinfoElecciones2025']}`);
-            console.log(`- ContenidoElecciones2025 sin narrativa: ${withoutNarrativeCounts['ContenidoElecciones2025']}`);
-            console.log('📋 Narrativas DesinfoElecciones2025:', desinfoNarrativeCounts);
-            console.log('📋 Narrativas ContenidoElecciones2025:', contenidoNarrativeCounts);
 
             res.json({
                 success: true,

@@ -106,6 +106,10 @@ class Database {
                     console.log('Posts table created or already exists');
                     // Después de crear la tabla, verificar si necesitamos agregar la nueva columna
                     this.addNewNarrativasColumnIfNotExists()
+                        .then(() => {
+                            // Limpiar narrativas duplicadas al inicializar
+                            return this.cleanDuplicateNarratives();
+                        })
                         .then(() => resolve())
                         .catch(reject);
                 }
@@ -158,8 +162,8 @@ class Database {
             new_narrativas
         } = postData;
 
-        // Primero verificar si el post ya existe usando check_dbid
-        const existsSQL = 'SELECT id FROM posts WHERE check_dbid = ?';
+        // Primero verificar si el post ya existe y si ha cambiado
+        const existsSQL = 'SELECT id, updated_at, new_narrativas, status FROM posts WHERE check_dbid = ?';
         
         return new Promise((resolve, reject) => {
             this.db.get(existsSQL, [check_dbid], (err, existingPost) => {
@@ -169,38 +173,103 @@ class Database {
                 }
                 
                 const isNewPost = !existingPost;
+                let hasChanges = isNewPost;
                 
-                const insertSQL = `
-                    INSERT OR REPLACE INTO posts (
+                // Si existe, SIEMPRE actualizar para asegurar datos frescos
+                if (existingPost && !isNewPost) {
+                    // Forzar actualización para limpiar datos acumulados
+                    hasChanges = true;
+                    
+
+                }
+                
+                // Para posts existentes, hacer DELETE + INSERT en transacción
+                if (!isNewPost && existingPost) {
+                    // Guardar referencia a this
+                    const self = this;
+                    
+                    // Usar transacción para DELETE + INSERT
+                    self.db.serialize(() => {
+                        self.db.run("BEGIN TRANSACTION");
+                        
+                        self.db.run("DELETE FROM posts WHERE check_dbid = ?", [check_dbid], (deleteErr) => {
+                            if (deleteErr) {
+                                self.db.run("ROLLBACK");
+                                reject(deleteErr);
+                                return;
+                            }
+                            
+                            const insertSQL = `
+                                INSERT INTO posts (
+                                    claim, item_page_url, status, created_by, submitted_at, updated_at,
+                                    social_media_posted_at, report_published_at, number_of_media,
+                                    tags, red_social, reacciones, formato, comentarios,
+                                    compartidos, visualizaciones, source, check_id, check_dbid,
+                                    fue_creado_con_ia, ataca_candidato, candidato_atacado,
+                                    ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
+                                    imita_medio, medio_imitado, tipo_rumor, rumor_promovido, new_narrativas
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            `;
+                            
+                            self.db.run(insertSQL, [
+                                claim, item_page_url, status, created_by, submitted_at, updated_at,
+                                social_media_posted_at, report_published_at, number_of_media || 1,
+                                tags, red_social, reacciones || 0, formato, comentarios || 0,
+                                compartidos || 0, visualizaciones || 0, source || 'check_api', check_id, check_dbid,
+                                fue_creado_con_ia, ataca_candidato, candidato_atacado,
+                                ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
+                                imita_medio, medio_imitado, tipo_rumor, rumor_promovido, new_narrativas
+                            ], function (insertErr) {
+                                if (insertErr) {
+                                    self.db.run("ROLLBACK");
+                                    reject(insertErr);
+                                } else {
+                                    self.db.run("COMMIT");
+                                    resolve({ 
+                                        id: this.lastID, 
+                                        changes: 1,
+                                        isNew: false,
+                                        isUpdated: true
+                                    });
+                                }
+                            });
+                        });
+                    });
+                } else {
+                    // INSERT normal para posts nuevos
+                    const insertSQL = `
+                        INSERT INTO posts (
+                            claim, item_page_url, status, created_by, submitted_at, updated_at,
+                            social_media_posted_at, report_published_at, number_of_media,
+                            tags, red_social, reacciones, formato, comentarios,
+                            compartidos, visualizaciones, source, check_id, check_dbid,
+                            fue_creado_con_ia, ataca_candidato, candidato_atacado,
+                            ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
+                            imita_medio, medio_imitado, tipo_rumor, rumor_promovido, new_narrativas
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `;
+                    
+                    this.db.run(insertSQL, [
                         claim, item_page_url, status, created_by, submitted_at, updated_at,
-                        social_media_posted_at, report_published_at, number_of_media,
-                        tags, red_social, reacciones, formato, comentarios,
-                        compartidos, visualizaciones, source, check_id, check_dbid,
+                        social_media_posted_at, report_published_at, number_of_media || 1,
+                        tags, red_social, reacciones || 0, formato, comentarios || 0,
+                        compartidos || 0, visualizaciones || 0, source || 'check_api', check_id, check_dbid,
                         fue_creado_con_ia, ataca_candidato, candidato_atacado,
                         ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
                         imita_medio, medio_imitado, tipo_rumor, rumor_promovido, new_narrativas
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                `;
-                
-                this.db.run(insertSQL, [
-                    claim, item_page_url, status, created_by, submitted_at, updated_at,
-                    social_media_posted_at, report_published_at, number_of_media || 1,
-                    tags, red_social, reacciones || 0, formato, comentarios || 0,
-                    compartidos || 0, visualizaciones || 0, source || 'check_api', check_id, check_dbid,
-                    fue_creado_con_ia, ataca_candidato, candidato_atacado,
-                    ataca_tse, narrativa_tse, es_caso_es, narrativa_desinformacion,
-                    imita_medio, medio_imitado, tipo_rumor, rumor_promovido, new_narrativas
-                ], function (err) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve({ 
-                            id: existingPost ? existingPost.id : this.lastID, 
-                            changes: isNewPost ? 1 : 0,
-                            isNew: isNewPost
-                        });
-                    }
-                });
+                    ], function (err) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve({ 
+                                id: this.lastID, 
+                                changes: 1,
+                                isNew: true,
+                                isUpdated: false
+                            });
+                        }
+                    });
+                }
             });
         });
     }
@@ -286,6 +355,45 @@ class Database {
                     const dbIds = rows.map(row => row.check_dbid).filter(id => id != null);
                     resolve(dbIds);
                 }
+            });
+        });
+    }
+
+    async cleanDuplicateNarratives() {
+        return new Promise((resolve, reject) => {
+            // Obtener todos los posts con narrativas para limpiarlos
+            this.db.all("SELECT id, new_narrativas FROM posts WHERE new_narrativas IS NOT NULL AND new_narrativas != ''", (err, rows) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                
+                let processed = 0;
+                const total = rows.length;
+                
+                if (total === 0) {
+                    console.log('✅ No hay narrativas para limpiar');
+                    resolve();
+                    return;
+                }
+                
+                rows.forEach((row) => {
+                    const narratives = row.new_narrativas.split(',').map(n => n.trim()).filter(n => n !== '');
+                    const uniqueNarratives = [...new Set(narratives)];
+                    const cleanNarratives = uniqueNarratives.join(', ');
+                    
+                    this.db.run("UPDATE posts SET new_narrativas = ? WHERE id = ?", [cleanNarratives, row.id], (updateErr) => {
+                        if (updateErr) {
+                            console.error(`Error limpiando narrativas para post ${row.id}:`, updateErr);
+                        }
+                        
+                        processed++;
+                        if (processed === total) {
+                            console.log(`✅ ${total} narrativas limpiadas exitosamente`);
+                            resolve();
+                        }
+                    });
+                });
             });
         });
     }
