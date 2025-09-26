@@ -99,6 +99,43 @@ function ElectoralAnalysisPageContent() {
     );
   }
 
+  // Función para obtener datos de narrativas de manera consistente
+  const getNarrativesData = () => {
+    if (!data || !selectedTag) return {};
+    
+    if (selectedTag === 'DesinfoElecciones2025') {
+      return data.desinfoNarratives || {};
+    } else if (selectedTag === 'ContenidoElecciones2025') {
+      return data.contenidoNarratives || {};
+    } else {
+      // Para otros tags, crear estructura vacía con las 14 narrativas
+      const templateNarratives = [
+        'Se está orquestando un fraude electoral',
+        'Dudas sobre el proceso electoral', 
+        'Campañas financiadas por terceros',
+        'Candidatos y partidos ligados al MAS o a Evo Morales',
+        'Ataques a candidatos o a partidos políticos',
+        'Supuesto apoyo a candidatos o partidos políticos',
+        'Tendencias de intención de voto (encuestas)',
+        'Resistencia hostil',
+        'Voto nulo',
+        'Conteo preliminar de votos',
+        'Promesas de campaña',
+        'Escenarios postelectorales',
+        'FIMI',
+        'Padrón electoral'
+      ];
+      
+      const emptyData: Record<string, number> = {};
+      templateNarratives.forEach(narrative => {
+        emptyData[narrative] = 0;
+      });
+      return emptyData;
+    }
+  };
+
+  const chartData = getNarrativesData();
+
   return (
     <div className="w-full space-y-6">
       {/* Header */}
@@ -306,15 +343,13 @@ function ElectoralAnalysisPageContent() {
       )}
 
       {/* Gráfica Principal del Tag Seleccionado */}
-      {data && data.narratives && selectedTag && (
-        <div className="opacity-0 animate-fade-in-up delay-150">
-          <InteractionBarChart
-            title={selectedTag === 'DesinfoElecciones2025' ? 'Narrativas de Desinformación Electoral 2025' :
-                   selectedTag === 'ContenidoElecciones2025' ? 'Narrativas de Contenido Electoral TSE 2025' :
-                   `Narrativas de ${selectedTag}`}
-            data={selectedTag === 'DesinfoElecciones2025' ? data.desinfoNarratives || data.narratives :
-                  selectedTag === 'ContenidoElecciones2025' ? data.contenidoNarratives || data.narratives :
-                  data.narratives}
+      {data && selectedTag && (
+          <div className="opacity-0 animate-fade-in-up delay-150">
+            <InteractionBarChart
+              title={selectedTag === 'DesinfoElecciones2025' ? 'Narrativas de Desinformación Electoral 2025' :
+                     selectedTag === 'ContenidoElecciones2025' ? 'Narrativas de Contenido Electoral TSE 2025' :
+                     `Narrativas de ${selectedTag}`}
+              data={chartData}
             className="w-full"
             color={selectedTag === 'DesinfoElecciones2025' ? 'rgb(220, 38, 127)' : 
                    selectedTag === 'ContenidoElecciones2025' ? 'rgb(251, 146, 60)' :
@@ -328,56 +363,51 @@ function ElectoralAnalysisPageContent() {
             useElectoralColors={selectedTag === 'DesinfoElecciones2025' || selectedTag === 'ContenidoElecciones2025'}
           />
 
-          {/* Lista de narrativas individuales con conteos - Solo para etiquetas electorales */}
-          {(selectedTag === 'DesinfoElecciones2025' || selectedTag === 'ContenidoElecciones2025') && (() => {
-            const narrativesData = selectedTag === 'DesinfoElecciones2025' ? (data.desinfoNarratives || {}) :
-                                  selectedTag === 'ContenidoElecciones2025' ? (data.contenidoNarratives || {}) : {};
-            const sortedEntries = Object.entries(narrativesData).sort(([,a], [,b]) => b - a);
-            const maxCount = Math.max(...Object.values(narrativesData));
-            
-            return (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {sortedEntries.map(([narrative, count]) => {
-                  const isHighest = count === maxCount && count > 0;
-                  const hasData = count > 0;
-                  
-                  // Determinar colores basado en el conteo
-                  let cardClasses = '';
-                  let badgeClasses = '';
-                  
-                  if (isHighest) {
-                    // Rojo para el más alto
-                    cardClasses = 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800';
-                    badgeClasses = 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200';
-                  } else if (hasData) {
-                    // Azul para los que tienen al menos 1
-                    cardClasses = 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800';
-                    badgeClasses = 'bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200';
-                  } else {
-                    // Plomo/gris para los que tienen 0
-                    cardClasses = 'bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-800';
-                    badgeClasses = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
-                  }
-                  
-                  return (
-                    <div 
-                      key={narrative}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${cardClasses}`}
-                    >
-                      <div className="flex items-center">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white truncate mr-2">
-                          {narrative}
-                        </span>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${badgeClasses}`}>
-                        {count}
+          {/* Lista de narrativas individuales con conteos - Para todos los tags */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(chartData)
+              .sort(([,a], [,b]) => (b as number) - (a as number))
+              .map(([narrative, count]) => {
+                const countNum = count as number;
+                const maxCount = Math.max(...Object.values(chartData), 0);
+                const isHighest = countNum === maxCount && countNum > 0;
+                const hasData = countNum > 0;
+                
+                // Determinar colores basado en el conteo
+                let cardClasses = '';
+                let badgeClasses = '';
+                
+                if (isHighest) {
+                  // Rojo para el más alto
+                  cardClasses = 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800';
+                  badgeClasses = 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200';
+                } else if (hasData) {
+                  // Azul para los que tienen al menos 1
+                  cardClasses = 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800';
+                  badgeClasses = 'bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200';
+                } else {
+                  // Plomo/gris para los que tienen 0
+                  cardClasses = 'bg-gray-50 dark:bg-gray-900/10 border-gray-200 dark:border-gray-800';
+                  badgeClasses = 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
+                }
+                
+                return (
+                  <div 
+                    key={narrative}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${cardClasses}`}
+                  >
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white truncate mr-2">
+                        {narrative}
                       </span>
                     </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${badgeClasses}`}>
+                      {countNum}
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
         </div>
       )}
 
@@ -463,12 +493,22 @@ function ElectoralAnalysisPageContent() {
             </div>
 
             {(!data.withoutNarratives[selectedTag] || data.withoutNarratives[selectedTag] === 0) ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <IconCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                <p className="text-lg font-medium">¡Excelente!</p>
-                <p>Todas las publicaciones de {selectedTag} tienen narrativas asignadas</p>
-                <div className="text-sm mt-1">({getTimeRangeLabel()})</div>
-              </div>
+              // Verificar si el tag no tiene publicaciones en absoluto
+              (!data.allTagCounts || !data.allTagCounts[selectedTag] || data.allTagCounts[selectedTag] === 0) ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <IconAlertTriangle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg font-medium">No se encontró ningún caso</p>
+                  <p>No hay publicaciones de {selectedTag} en el período analizado</p>
+                  <div className="text-sm mt-1">({getTimeRangeLabel()})</div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <IconCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                  <p className="text-lg font-medium">¡Excelente!</p>
+                  <p>Todas las publicaciones de {selectedTag} tienen narrativas asignadas</p>
+                  <div className="text-sm mt-1">({getTimeRangeLabel()})</div>
+                </div>
+              )
             ) : (
               <div className="text-center py-8">
                 <div className="text-4xl font-bold text-gray-600 dark:text-gray-400 mb-2">
