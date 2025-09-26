@@ -9,6 +9,7 @@ import {
   IconFileText,
   IconChartBar,
   IconLogout,
+  IconTrendingUp,
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -65,7 +66,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
       label: "Interacciones",
       href: "/interactions",
       icon: (
-        <IconChartBar className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconTrendingUp className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
     },
     {
