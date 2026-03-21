@@ -1,0 +1,10 @@
+# Root ignores
+backend/node_modules/
+backend/.env
+backend/database/*.db
+backend/database/*.sqlite
+backend/database/*.sqlite3
+
+# Frontend build/deps (frontend has its own .gitignore too)
+frontend/node_modules/
+frontend/.next/
