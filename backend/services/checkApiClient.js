@@ -649,20 +649,17 @@ class CheckApiClient {
         // Set para evitar duplicados desde el inicio
         const narrativeSet = new Set();
         const narrativePatterns = [
-            'Se está orquestando un fraude electoral',
-            'Dudas sobre el proceso electoral',
-            'Campañas financiadas por terceros',
-            'Candidatos y partidos ligados al MAS o a Evo Morales',
-            'Ataques a candidatos o a partidos políticos',
-            'Supuesto apoyo a candidatos o partidos políticos',
-            'Tendencias de intención de voto (encuestas)',
-            'Resistencia hostil',
-            'Voto nulo',
-            'Conteo preliminar de votos',
-            'Promesas de campaña',
-            'Escenarios postelectorales',
-            'FIMI',
-            'Padrón electoral'
+            'Amenazas de bloqueos / convulsión social',
+            'Golpe de Estado planificado por Lara',
+            'División de poderes del Gobierno',
+            'Cooperación con la DEA',
+            'Problemas de abastecimiento de combustible',
+            'Tipo de cambio de dolar y disponibilidad de divisas',
+            'Racismo y discriminación',
+            'Medioa ambiente',
+            'Ingerencia de Estados Unidos en Bolivia',
+            'Cambios estructurales del Gobierno de Paz',
+            'Alza a la subvención de hidrocarburos'
         ];
 
         // Buscar patrones en todas las tasks/responses
@@ -709,20 +706,17 @@ class CheckApiClient {
 
     getNarrativeKeywords(narrative) {
         const keywordMap = {
-            'Se está orquestando un fraude electoral': ['fraude electoral', 'fraude', 'orquestando', 'manipulación electoral', 'elecciones fraudulentas'],
-            'Dudas sobre el proceso electoral': ['dudas', 'proceso electoral', 'desconfianza proceso', 'cuestionamiento electoral'],
-            'Campañas financiadas por terceros': ['financiamiento', 'financiadas', 'terceros', 'dinero campaña', 'fondos externos'],
-            'Candidatos y partidos ligados al MAS o a Evo Morales': ['MAS', 'Evo Morales', 'movimiento al socialismo', 'ligados', 'vinculados'],
-            'Ataques a candidatos o a partidos políticos': ['ataque', 'candidato', 'partido', 'político', 'difamación', 'agresión política'],
-            'Supuesto apoyo a candidatos o partidos políticos': ['apoyo', 'respaldo', 'endorsement', 'favorece', 'beneficia candidato'],
-            'Tendencias de intención de voto (encuestas)': ['encuesta', 'intención de voto', 'tendencia', 'sondeo', 'preferencia electoral'],
-            'Resistencia hostil': ['resistencia', 'hostil', 'oposición violenta', 'confrontación', 'resistencia armada'],
-            'Voto nulo': ['voto nulo', 'anular voto', 'votar nulo', 'nulificar'],
-            'Conteo preliminar de votos': ['conteo preliminar', 'escrutinio', 'conteo votos', 'resultados preliminares'],
-            'Promesas de campaña': ['promesa', 'propuesta', 'compromiso', 'oferta electoral', 'plan de gobierno'],
-            'Escenarios postelectorales': ['postelectoral', 'después elecciones', 'escenario electoral', 'post elecciones'],
-            'FIMI': ['FIMI', 'operación de influencia', 'interferencia extranjera', 'manipulación información'],
-            'Padrón electoral': ['padrón electoral', 'registro electoral', 'censo electoral', 'lista votantes']
+            'Amenazas de bloqueos / convulsión social': ['bloqueos', 'convulsión social', 'paro', 'disturbios', 'amenazas'],
+            'Golpe de Estado planificado por Lara': ['golpe de estado', 'lara', 'planificado', 'quiebre institucional'],
+            'División de poderes del Gobierno': ['división de poderes', 'separación de poderes', 'ejecutivo', 'legislativo', 'judicial'],
+            'Cooperación con la DEA': ['dea', 'cooperación dea', 'antidrogas', 'agencia antidrogas'],
+            'Problemas de abastecimiento de combustible': ['combustible', 'abastecimiento', 'gasolina', 'diésel', 'escasez'],
+            'Tipo de cambio de dolar y disponibilidad de divisas': ['tipo de cambio', 'dolar', 'divisas', 'mercado cambiario'],
+            'Racismo y discriminación': ['racismo', 'discriminación', 'discriminatorio', 'xenofobia'],
+            'Medioa ambiente': ['medio ambiente', 'ambiental', 'ecología', 'contaminación'],
+            'Ingerencia de Estados Unidos en Bolivia': ['ingerencia', 'estados unidos', 'eeuu', 'intervención extranjera'],
+            'Cambios estructurales del Gobierno de Paz': ['cambios estructurales', 'gobierno de paz', 'reforma estructural'],
+            'Alza a la subvención de hidrocarburos': ['subvención', 'hidrocarburos', 'alza', 'incremento subsidio']
         };
 
         return keywordMap[narrative] || [];

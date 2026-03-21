@@ -108,22 +108,19 @@ function ElectoralAnalysisPageContent() {
     } else if (selectedTag === 'ContenidoElecciones2025') {
       return data.contenidoNarratives || {};
     } else {
-      // Para otros tags, crear estructura vacía con las 14 narrativas
+      // Para otros tags, crear estructura vacía con las narrativas actualizadas
       const templateNarratives = [
-        'Se está orquestando un fraude electoral',
-        'Dudas sobre el proceso electoral', 
-        'Campañas financiadas por terceros',
-        'Candidatos y partidos ligados al MAS o a Evo Morales',
-        'Ataques a candidatos o a partidos políticos',
-        'Supuesto apoyo a candidatos o partidos políticos',
-        'Tendencias de intención de voto (encuestas)',
-        'Resistencia hostil',
-        'Voto nulo',
-        'Conteo preliminar de votos',
-        'Promesas de campaña',
-        'Escenarios postelectorales',
-        'FIMI',
-        'Padrón electoral'
+        'Amenazas de bloqueos / convulsión social',
+        'Golpe de Estado planificado por Lara',
+        'División de poderes del Gobierno',
+        'Cooperación con la DEA',
+        'Problemas de abastecimiento de combustible',
+        'Tipo de cambio de dolar y disponibilidad de divisas',
+        'Racismo y discriminación',
+        'Medioa ambiente',
+        'Ingerencia de Estados Unidos en Bolivia',
+        'Cambios estructurales del Gobierno de Paz',
+        'Alza a la subvención de hidrocarburos'
       ];
       
       const emptyData: Record<string, number> = {};
@@ -204,8 +201,11 @@ function ElectoralAnalysisPageContent() {
                 <option value="Contenido Judiciales 2024">Contenido Judiciales 2024</option>
                 <option value="Contenidos Judiciales">Contenidos Judiciales</option>
                 <option value="DesinformaciónEnMedios2025">DesinformaciónEnMedios2025</option>
+                <option value="DesinformaciónEnMedios2026">DesinformaciónEnMedios2026</option>
                 <option value="Desinformación Judiciales 2024">Desinformación Judiciales 2024</option>
+                <option value="Desinfo Subnacionales 2026">Desinfo Subnacionales 2026</option>
                 <option value="Mpox">Mpox</option>
+                <option value="Rumores Subnacionales 2026">Rumores Subnacionales 2026</option>
                 <option value="UnCandidatoDesinforma2025">UnCandidatoDesinforma2025</option>
               </select>
             </div>

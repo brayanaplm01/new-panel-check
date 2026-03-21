@@ -1,6 +1,20 @@
 class ElectoralController {
     constructor(database) {
         this.database = database;
+        this.electoralTags = [
+            'DesinfoElecciones2025',
+            'AtaqueAlTSE2025',
+            'ContenidoElecciones2025',
+            'Contenido Judiciales 2024',
+            'Contenidos Judiciales',
+            'DesinformaciónEnMedios2025',
+            'DesinformaciónEnMedios2026',
+            'Desinformación Judiciales 2024',
+            'Desinfo Subnacionales 2026',
+            'Rumores Subnacionales 2026',
+            'Mpox',
+            'UnCandidatoDesinforma2025'
+        ];
     }
 
     async getElectoralAnalysis(req, res) {
@@ -38,11 +52,10 @@ class ElectoralController {
                 return false;
             });
 
-            // Filtrar posts con etiquetas electorales
+            // Filtrar posts con etiquetas electorales soportadas
             const electoralPosts = postsInDateRange.filter(post => {
                 if (!post.tags) return false;
-                return post.tags.includes('DesinfoElecciones2025') || 
-                       post.tags.includes('ContenidoElecciones2025');
+                return this.electoralTags.some(tagName => post.tags.includes(tagName));
             });
 
             // Separar posts CON narrativas y SIN narrativas
@@ -67,32 +80,27 @@ class ElectoralController {
             });
 
             // Contar publicaciones por etiqueta y narrativa (solo los que tienen narrativas)
-            const counts = {
-                'DesinfoElecciones2025': 0,
-                'ContenidoElecciones2025': 0
-            };
+            const counts = {};
+            const narrativeDetails = {};
 
-            const narrativeDetails = {
-                'DesinfoElecciones2025': {},
-                'ContenidoElecciones2025': {}
-            };
+            this.electoralTags.forEach(tagName => {
+                counts[tagName] = 0;
+                narrativeDetails[tagName] = {};
+            });
 
             // Lista completa de todas las narrativas electorales
             const allNarratives = [
-                'Se está orquestando un fraude electoral',
-                'Dudas sobre el proceso electoral',
-                'Campañas financiadas por terceros',
-                'Candidatos y partidos ligados al MAS o a Evo Morales',
-                'Ataques a candidatos o a partidos políticos',
-                'Supuesto apoyo a candidatos o partidos políticos',
-                'Tendencias de intención de voto (encuestas)',
-                'Resistencia hostil',
-                'Voto nulo',
-                'Conteo preliminar de votos',
-                'Promesas de campaña',
-                'Escenarios postelectorales',
-                'FIMI',
-                'Padrón electoral'
+                'Amenazas de bloqueos / convulsión social',
+                'Golpe de Estado planificado por Lara',
+                'División de poderes del Gobierno',
+                'Cooperación con la DEA',
+                'Problemas de abastecimiento de combustible',
+                'Tipo de cambio de dolar y disponibilidad de divisas',
+                'Racismo y discriminación',
+                'Medioa ambiente',
+                'Ingerencia de Estados Unidos en Bolivia',
+                'Cambios estructurales del Gobierno de Paz',
+                'Alza a la subvención de hidrocarburos'
             ];
 
             // Inicializar conteos específicos con todas las narrativas en 0
@@ -133,43 +141,41 @@ class ElectoralController {
                 }
                 
                 // Contar posts por tag
-                if (post.tags.includes('DesinfoElecciones2025')) {
-                    counts['DesinfoElecciones2025']++;
-                }
-                
-                if (post.tags.includes('ContenidoElecciones2025')) {
-                    counts['ContenidoElecciones2025']++;
-                }
+                this.electoralTags.forEach(tagName => {
+                    if (post.tags.includes(tagName)) {
+                        counts[tagName]++;
+                    }
+                });
             });
 
             // Contar TODAS las publicaciones por tag (con y sin narrativas)
-            const allTagCounts = {
-                'DesinfoElecciones2025': 0,
-                'ContenidoElecciones2025': 0
-            };
+            const allTagCounts = {};
+
+            this.electoralTags.forEach(tagName => {
+                allTagCounts[tagName] = 0;
+            });
 
             electoralPosts.forEach(post => {
-                if (post.tags.includes('DesinfoElecciones2025')) {
-                    allTagCounts['DesinfoElecciones2025']++;
-                }
-                if (post.tags.includes('ContenidoElecciones2025')) {
-                    allTagCounts['ContenidoElecciones2025']++;
-                }
+                this.electoralTags.forEach(tagName => {
+                    if (post.tags.includes(tagName)) {
+                        allTagCounts[tagName]++;
+                    }
+                });
             });
 
             // Contar publicaciones SIN narrativas por etiqueta
-            const withoutNarrativeCounts = {
-                'DesinfoElecciones2025': 0,
-                'ContenidoElecciones2025': 0
-            };
+            const withoutNarrativeCounts = {};
+
+            this.electoralTags.forEach(tagName => {
+                withoutNarrativeCounts[tagName] = 0;
+            });
 
             postsWithoutNarratives.forEach(post => {
-                if (post.tags.includes('DesinfoElecciones2025')) {
-                    withoutNarrativeCounts['DesinfoElecciones2025']++;
-                }
-                if (post.tags.includes('ContenidoElecciones2025')) {
-                    withoutNarrativeCounts['ContenidoElecciones2025']++;
-                }
+                this.electoralTags.forEach(tagName => {
+                    if (post.tags.includes(tagName)) {
+                        withoutNarrativeCounts[tagName]++;
+                    }
+                });
             });
 
             res.json({
