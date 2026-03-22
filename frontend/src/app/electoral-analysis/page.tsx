@@ -15,8 +15,8 @@ function ElectoralAnalysisPageContent() {
   
   // Estados para los filtros
   const [selectedTag, setSelectedTag] = useState('');
-  const [startDate, setStartDate] = useState<Date | null>(new Date('2025-09-01'));
-  const [endDate, setEndDate] = useState<Date | null>(new Date('2025-09-30'));
+  const [startDate, setStartDate] = useState<Date | null>(new Date('2026-01-01'));
+  const [endDate, setEndDate] = useState<Date | null>(new Date('2026-03-22'));
 
   // Actualizar datos cuando cambien los filtros
   useEffect(() => {
@@ -41,7 +41,7 @@ function ElectoralAnalysisPageContent() {
   // Función para obtener el rango de fechas como texto
   const getTimeRangeLabel = () => {
     if (!startDate && !endDate) {
-      return 'Septiembre 2025';
+      return '01/01/2026 - 22/03/2026';
     }
     if (startDate && endDate && startDate.toDateString() === endDate.toDateString()) {
       return format(startDate, 'dd \'de\' MMMM \'de\' yyyy', { locale: es });
@@ -102,36 +102,42 @@ function ElectoralAnalysisPageContent() {
   // Función para obtener datos de narrativas de manera consistente
   const getNarrativesData = () => {
     if (!data || !selectedTag) return {};
-    
+
+    // Si el backend ya envía narrativas para el tag seleccionado, usarlas directamente
+    const selectedTagNarratives = data.narrativeDetails?.[selectedTag];
+    if (selectedTagNarratives && Object.keys(selectedTagNarratives).length > 0) {
+      return selectedTagNarratives;
+    }
+
     if (selectedTag === 'DesinfoElecciones2025') {
       return data.desinfoNarratives || {};
-    } else if (selectedTag === 'ContenidoElecciones2025') {
-      return data.contenidoNarratives || {};
-    } else {
-      // Para otros tags, crear estructura vacía con las narrativas actualizadas
-      const templateNarratives = [
-        'Amenazas de bloqueos / convulsión social',
-        'Golpe de Estado planificado por Lara',
-        'División de poderes del Gobierno',
-        'Cooperación con la DEA',
-        'Problemas de abastecimiento de combustible',
-        'Tipo de cambio de dolar y disponibilidad de divisas',
-        'Racismo y discriminación',
-        'Medioa ambiente',
-        'Ingerencia de Estados Unidos en Bolivia',
-        'Cambios estructurales del Gobierno de Paz',
-        'Alza a la subvención de hidrocarburos'
-      ];
-      
-      const emptyData: Record<string, number> = {};
-      templateNarratives.forEach(narrative => {
-        emptyData[narrative] = 0;
-      });
-      return emptyData;
     }
+    if (selectedTag === 'ContenidoElecciones2025') {
+      return data.contenidoNarratives || {};
+    }
+
+    // Para otros tags, crear estructura vacía con las narrativas actualizadas
+    const templateNarratives = [
+      'Posicionamiento electoral (encuestas y sondeos)',
+      'Deslegitimación de candidaturas',
+      'Narrativa de escándalo y descrédito personal',
+      'Habilitación e inhabilitación de candidaturas'
+    ];
+
+    const emptyData: Record<string, number> = {};
+    templateNarratives.forEach(narrative => {
+      emptyData[narrative] = 0;
+    });
+    return emptyData;
   };
 
   const chartData = getNarrativesData();
+  const sortedTagCounts = data?.allTagCounts
+    ? Object.entries(data.allTagCounts).sort(([, a], [, b]) => b - a)
+    : [];
+  const totalComparativePosts = sortedTagCounts.reduce((acc, [, count]) => acc + count, 0);
+  const topComparativeTags = sortedTagCounts.filter(([, count]) => count > 0).slice(0, 3);
+  const maxComparativeCount = sortedTagCounts.length > 0 ? sortedTagCounts[0][1] : 0;
 
   return (
     <div className="w-full space-y-6">
@@ -140,7 +146,7 @@ function ElectoralAnalysisPageContent() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Análisis Electoral 2025
+              Analisis Subnacional 2026
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
               {selectedTag 
@@ -252,12 +258,12 @@ function ElectoralAnalysisPageContent() {
               </button>
               <button
                 onClick={() => {
-                  setStartDate(new Date('2025-09-01'));
-                  setEndDate(new Date('2025-09-30'));
+                  setStartDate(new Date('2026-01-01'));
+                  setEndDate(new Date('2026-03-22'));
                 }}
                 className="px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-full transition-colors"
               >
-                Septiembre 2025
+                Ene-Mar 2026
               </button>
               <button
                 onClick={() => {
@@ -272,12 +278,12 @@ function ElectoralAnalysisPageContent() {
               </button>
               <button
                 onClick={() => {
-                  setStartDate(new Date('2025-09-03'));
-                  setEndDate(new Date('2025-09-03'));
+                  setStartDate(new Date('2026-03-22'));
+                  setEndDate(new Date('2026-03-22'));
                 }}
                 className="px-3 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-900 dark:hover:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-full transition-colors"
               >
-                3 de Sept
+                22 de Mar
               </button>
             </div>
 
@@ -320,12 +326,12 @@ function ElectoralAnalysisPageContent() {
                 </button>
                 <button
                   onClick={() => {
-                    setStartDate(new Date('2025-09-01'));
-                    setEndDate(new Date('2025-09-30'));
+                    setStartDate(new Date('2026-01-01'));
+                    setEndDate(new Date('2026-03-22'));
                   }}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
-                  Septiembre 2025
+                  Ene-Mar 2026
                 </button>
                 <button
                   onClick={() => {
@@ -419,54 +425,59 @@ function ElectoralAnalysisPageContent() {
             data={data.allTagCounts}
             className="w-full"
             color="rgb(147, 51, 234)"
-            maxItems={10}
+            maxItems={15}
           />
 
           {/* Resumen comparativo */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800">
-              <div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Desinformación Electoral
-                </span>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  Publicaciones con contenido de desinformación
-                </p>
-              </div>
-              <span className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-3 py-2 rounded-full text-lg font-bold">
-                {data.allTagCounts['DesinfoElecciones2025'] || 0}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Contenido Electoral TSE
-                </span>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  Publicaciones sobre contenido electoral general
-                </p>
-              </div>
-              <span className="bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-3 py-2 rounded-full text-lg font-bold">
-                {data.allTagCounts['ContenidoElecciones2025'] || 0}
-              </span>
-            </div>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sortedTagCounts.map(([tag, count]) => {
+              const isHighest = count === maxComparativeCount && count > 0;
+              const hasData = count > 0;
+
+              const cardClasses = isHighest
+                ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
+                : hasData
+                  ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800'
+                  : 'bg-gray-50 dark:bg-neutral-900/20 border-gray-200 dark:border-neutral-700';
+
+              const badgeClasses = isHighest
+                ? 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'
+                : hasData
+                  ? 'bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
+
+              return (
+                <div key={tag} className={`flex items-center justify-between p-4 rounded-lg border ${cardClasses}`}>
+                  <div className="min-w-0 mr-3">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white block truncate">
+                      {tag}
+                    </span>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      Publicaciones registradas para esta etiqueta
+                    </p>
+                  </div>
+                  <span className={`px-3 py-2 rounded-full text-lg font-bold shrink-0 ${badgeClasses}`}>
+                    {count || 0}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Porcentajes */}
-          {(data.allTagCounts['DesinfoElecciones2025'] > 0 || data.allTagCounts['ContenidoElecciones2025'] > 0) && (
+          {/* Resumen top etiquetas */}
+          {topComparativeTags.length > 0 && (
             <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                <span className="font-medium">
-                  {data.allTagCounts['DesinfoElecciones2025'] || 0} desinformación 
-                </span>
-                {' vs '}
-                <span className="font-medium">
-                  {data.allTagCounts['ContenidoElecciones2025'] || 0} contenido electoral
-                </span>
-                {' • '}
+                <span className="font-medium">Top etiquetas: </span>
+                {topComparativeTags.map(([tag, count], index) => (
+                  <span key={tag} className="font-medium">
+                    {index > 0 ? ' • ' : ''}
+                    {tag} ({count})
+                  </span>
+                ))}
+                <span className="mx-2">•</span>
                 <span className="text-xs">
-                  Total: {(data.allTagCounts['DesinfoElecciones2025'] || 0) + (data.allTagCounts['ContenidoElecciones2025'] || 0)} publicaciones
+                  Total: {totalComparativePosts} publicaciones
                 </span>
               </div>
             </div>

@@ -90,17 +90,10 @@ class ElectoralController {
 
             // Lista completa de todas las narrativas electorales
             const allNarratives = [
-                'Amenazas de bloqueos / convulsión social',
-                'Golpe de Estado planificado por Lara',
-                'División de poderes del Gobierno',
-                'Cooperación con la DEA',
-                'Problemas de abastecimiento de combustible',
-                'Tipo de cambio de dolar y disponibilidad de divisas',
-                'Racismo y discriminación',
-                'Medioa ambiente',
-                'Ingerencia de Estados Unidos en Bolivia',
-                'Cambios estructurales del Gobierno de Paz',
-                'Alza a la subvención de hidrocarburos'
+                'Posicionamiento electoral (encuestas y sondeos)',
+                'Deslegitimación de candidaturas',
+                'Narrativa de escándalo y descrédito personal',
+                'Habilitación e inhabilitación de candidaturas'
             ];
 
             // Inicializar conteos específicos con todas las narrativas en 0
@@ -123,17 +116,21 @@ class ElectoralController {
                         
                         individualNarratives.forEach(narrative => {
                             if (narrative && allNarratives.includes(narrative)) {
-                                // Contar para el tag correspondiente
+                                // Contar narrativas para cualquier tag configurado presente en el post
+                                this.electoralTags.forEach(tagName => {
+                                    if (post.tags.includes(tagName)) {
+                                        narrativeDetails[tagName][narrative] =
+                                            (narrativeDetails[tagName][narrative] || 0) + 1;
+                                    }
+                                });
+
+                                // Mantener compatibilidad con campos legacy usados por el frontend
                                 if (post.tags.includes('DesinfoElecciones2025')) {
                                     desinfoNarrativeCounts[narrative]++;
-                                    narrativeDetails['DesinfoElecciones2025'][narrative] = 
-                                        (narrativeDetails['DesinfoElecciones2025'][narrative] || 0) + 1;
                                 }
-                                
+
                                 if (post.tags.includes('ContenidoElecciones2025')) {
                                     contenidoNarrativeCounts[narrative]++;
-                                    narrativeDetails['ContenidoElecciones2025'][narrative] = 
-                                        (narrativeDetails['ContenidoElecciones2025'][narrative] || 0) + 1;
                                 }
                             }
                         });

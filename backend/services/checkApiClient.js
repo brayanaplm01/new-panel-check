@@ -649,17 +649,10 @@ class CheckApiClient {
         // Set para evitar duplicados desde el inicio
         const narrativeSet = new Set();
         const narrativePatterns = [
-            'Amenazas de bloqueos / convulsión social',
-            'Golpe de Estado planificado por Lara',
-            'División de poderes del Gobierno',
-            'Cooperación con la DEA',
-            'Problemas de abastecimiento de combustible',
-            'Tipo de cambio de dolar y disponibilidad de divisas',
-            'Racismo y discriminación',
-            'Medioa ambiente',
-            'Ingerencia de Estados Unidos en Bolivia',
-            'Cambios estructurales del Gobierno de Paz',
-            'Alza a la subvención de hidrocarburos'
+            'Posicionamiento electoral (encuestas y sondeos)',
+            'Deslegitimación de candidaturas',
+            'Narrativa de escándalo y descrédito personal',
+            'Habilitación e inhabilitación de candidaturas'
         ];
 
         // Buscar patrones en todas las tasks/responses
@@ -706,17 +699,10 @@ class CheckApiClient {
 
     getNarrativeKeywords(narrative) {
         const keywordMap = {
-            'Amenazas de bloqueos / convulsión social': ['bloqueos', 'convulsión social', 'paro', 'disturbios', 'amenazas'],
-            'Golpe de Estado planificado por Lara': ['golpe de estado', 'lara', 'planificado', 'quiebre institucional'],
-            'División de poderes del Gobierno': ['división de poderes', 'separación de poderes', 'ejecutivo', 'legislativo', 'judicial'],
-            'Cooperación con la DEA': ['dea', 'cooperación dea', 'antidrogas', 'agencia antidrogas'],
-            'Problemas de abastecimiento de combustible': ['combustible', 'abastecimiento', 'gasolina', 'diésel', 'escasez'],
-            'Tipo de cambio de dolar y disponibilidad de divisas': ['tipo de cambio', 'dolar', 'divisas', 'mercado cambiario'],
-            'Racismo y discriminación': ['racismo', 'discriminación', 'discriminatorio', 'xenofobia'],
-            'Medioa ambiente': ['medio ambiente', 'ambiental', 'ecología', 'contaminación'],
-            'Ingerencia de Estados Unidos en Bolivia': ['ingerencia', 'estados unidos', 'eeuu', 'intervención extranjera'],
-            'Cambios estructurales del Gobierno de Paz': ['cambios estructurales', 'gobierno de paz', 'reforma estructural'],
-            'Alza a la subvención de hidrocarburos': ['subvención', 'hidrocarburos', 'alza', 'incremento subsidio']
+            'Posicionamiento electoral (encuestas y sondeos)': ['posicionamiento electoral', 'encuestas', 'sondeos', 'intención de voto', 'preferencia electoral'],
+            'Deslegitimación de candidaturas': ['deslegitimación', 'deslegitimacion', 'candidaturas', 'inhabilidad moral', 'candidato ilegítimo'],
+            'Narrativa de escándalo y descrédito personal': ['escándalo', 'escandalo', 'descrédito personal', 'ataque personal', 'difamación'],
+            'Habilitación e inhabilitación de candidaturas': ['habilitación', 'habilitacion', 'inhabilitación', 'inhabilitacion', 'candidaturas']
         };
 
         return keywordMap[narrative] || [];
